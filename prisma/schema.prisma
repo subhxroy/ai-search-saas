@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  title     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  role           String       // "user" or "assistant"
+  content        String
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sources        Source[]
+  followUps      String       @default("[]") // JSON string of follow-up questions
+  createdAt      DateTime     @default(now())
+}
+
+model Source {
+  id        String  @id @default(cuid())
+  title     String
+  url       String
+  snippet   String  @default("")
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  favicon   String  @default("")
+  rank      Int     @default(0)
+}
