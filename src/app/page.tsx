@@ -1,26 +1,168 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useChatStore } from '@/store/chat-store'
-import SearchInput from '@/components/SearchInput'
 import ChatView from '@/components/ChatView'
 import ConversationSidebar from '@/components/ConversationSidebar'
-import { Menu, Sparkles, Plus } from 'lucide-react'
+import HeroSection from '@/components/landing/HeroSection'
+import AIDemoSection from '@/components/landing/AIDemoSection'
+import WhyThisProductSection from '@/components/landing/WhyThisProductSection'
+import ResearchWorkflowSection from '@/components/landing/ResearchWorkflowSection'
+import ComparisonSection from '@/components/landing/ComparisonSection'
+import SocialProofSection from '@/components/landing/SocialProofSection'
+import PricingSection from '@/components/landing/PricingSection'
+import FAQSection from '@/components/landing/FAQSection'
+import FinalCTASection from '@/components/landing/FinalCTASection'
+import Footer from '@/components/landing/Footer'
+import { Menu, Sparkles, Plus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Home() {
-  const { view, sidebarOpen, setSidebarOpen, reset } = useChatStore()
+  const {
+    view,
+    setView,
+    sidebarOpen,
+    setSidebarOpen,
+    reset,
+    addMessage,
+    setIsLoading,
+    setCurrentSources,
+    setCurrentFollowUps,
+    setConversationId,
+    conversationId,
+    updateLastAssistantMessage,
+    finalizeLastAssistantMessage,
+    clearMessages,
+  } = useChatStore()
 
   // Enable dark mode by default
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
 
+  const handleSearch = useCallback(
+    async (query: string) => {
+      if (!query.trim()) return
+
+      // Clear old messages and start fresh
+      clearMessages()
+      setConversationId(null)
+      addMessage({ role: 'user', content: query.trim() })
+      setView('chat')
+      setIsLoading(true)
+      setCurrentSources([])
+      setCurrentFollowUps([])
+
+      // Add placeholder assistant message
+      addMessage({ role: 'assistant', content: '', isStreaming: true })
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query.trim() }),
+        })
+
+        if (!res.ok) {
+          updateLastAssistantMessage(
+            'Sorry, something went wrong. Please try again.'
+          )
+          finalizeLastAssistantMessage([], [])
+          setIsLoading(false)
+          return
+        }
+
+        const reader = res.body?.getReader()
+        if (!reader) {
+          updateLastAssistantMessage('Failed to read response.')
+          finalizeLastAssistantMessage([], [])
+          setIsLoading(false)
+          return
+        }
+
+        const decoder = new TextDecoder()
+        let accumulatedText = ''
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(line.slice(6))
+                if (parsed.type === 'sources') {
+                  setCurrentSources(parsed.data)
+                } else if (parsed.type === 'token') {
+                  accumulatedText += parsed.data
+                  updateLastAssistantMessage(accumulatedText)
+                } else if (parsed.type === 'followups') {
+                  setCurrentFollowUps(parsed.data)
+                } else if (parsed.type === 'done') {
+                  setConversationId(parsed.data.conversationId)
+                }
+              } catch {
+                // skip malformed JSON
+              }
+            }
+          }
+        }
+        // Finalize the message
+        const state = useChatStore.getState()
+        finalizeLastAssistantMessage(
+          state.currentSources,
+          state.currentFollowUps
+        )
+      } catch {
+        updateLastAssistantMessage(
+          'Network error. Please check your connection and try again.'
+        )
+        finalizeLastAssistantMessage([], [])
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [
+      addMessage,
+      clearMessages,
+      conversationId,
+      finalizeLastAssistantMessage,
+      setConversationId,
+      setCurrentFollowUps,
+      setCurrentSources,
+      setIsLoading,
+      setView,
+      updateLastAssistantMessage,
+    ]
+  )
+
+  const handleBackToLanding = () => {
+    reset()
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      {/* Navbar - always visible */}
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="flex items-center gap-2">
+          {view === 'chat' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToLanding}
+              className="h-9 w-9 mr-1"
+              aria-label="Back to home"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -31,11 +173,11 @@ export default function Home() {
             <Menu className="h-5 w-5" />
           </Button>
           <button
-            onClick={() => reset()}
+            onClick={handleBackToLanding}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-white/10">
+              <Sparkles className="h-4 w-4 text-cyan-400" />
             </div>
             <span className="text-base font-semibold tracking-tight hidden sm:inline">
               Nexus AI
@@ -43,15 +185,48 @@ export default function Home() {
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => reset()}
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm">New Search</span>
-          </Button>
+          {view === 'chat' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToLanding}
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">New Search</span>
+            </Button>
+          )}
+          {view === 'home' && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground text-sm"
+                onClick={() => {
+                  document
+                    .getElementById('pricing')
+                    ?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                Pricing
+              </Button>
+              <Button
+                size="sm"
+                className="text-sm font-medium"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(6,182,212,0.9), rgba(139,92,246,0.9))',
+                }}
+                onClick={() => {
+                  document
+                    .getElementById('hero-search')
+                    ?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -59,38 +234,51 @@ export default function Home() {
       <ConversationSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col">
         {view === 'home' ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 animate-fade-in">
-            <div className="mb-10 text-center">
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                  <Sparkles className="h-7 w-7 text-primary" />
-                </div>
-              </div>
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3 leading-tight">
-                Where knowledge
-                <br />
-                <span className="text-primary">begins</span>
-              </h1>
-              <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-                Search the web with AI. Get answers with sources, citations, and
-                follow-up suggestions.
-              </p>
+          /* Landing Page */
+          <div className="pt-16">
+            {/* Hero Section */}
+            <div id="hero-search">
+              <HeroSection onSearch={handleSearch} />
             </div>
-            <SearchInput showSuggestions />
+
+            {/* AI Demo Section */}
+            <AIDemoSection />
+
+            {/* Why This Product */}
+            <WhyThisProductSection />
+
+            {/* Research Workflow */}
+            <ResearchWorkflowSection />
+
+            {/* Comparison */}
+            <ComparisonSection />
+
+            {/* Social Proof */}
+            <SocialProofSection />
+
+            {/* Pricing */}
+            <div id="pricing">
+              <PricingSection />
+            </div>
+
+            {/* FAQ */}
+            <FAQSection />
+
+            {/* Final CTA */}
+            <FinalCTASection />
+
+            {/* Footer */}
+            <Footer />
           </div>
         ) : (
-          <ChatView />
+          /* Chat View */
+          <div className="pt-16 flex-1 flex flex-col">
+            <ChatView />
+          </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="h-10 flex items-center justify-center border-t border-border shrink-0">
-        <p className="text-xs text-muted-foreground">
-          Powered by AI Search &middot; Nexus AI
-        </p>
-      </footer>
     </div>
   )
 }
