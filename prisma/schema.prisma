@@ -7,22 +7,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── USERS & AUTH ───
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String    @default("")
+  avatar        String    @default("")
+  role          String    @default("user") // user, admin
+  company       String    @default("")
+  jobTitle      String    @default("")
+  plan          String    @default("free") // free, pro, enterprise
+  onboarded     Boolean   @default(false)
+  onboardingData String   @default("{}") // JSON
+  preferences   String    @default("{}") // JSON for theme, language, notifications, etc.
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  conversations   Conversation[]
+  collections     Collection[]
+  savedItems      SavedItem[]
+  sharedChats     SharedChat[]
+  apiKeys         ApiKey[]
+  usageLogs       UsageLog[]
+  feedbacks       Feedback[]
+  teamMemberships TeamMember[]
+  subscriptions   Subscription[]
+}
+
+// ─── CONVERSATIONS & MESSAGES ───
+
 model Conversation {
-  id        String    @id @default(cuid())
-  title     String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  messages  Message[]
+  id           String   @id @default(cuid())
+  title        String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId  String?
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  pinned       Boolean  @default(false)
+  isDeepResearch Boolean @default(false)
+  researchStatus String @default("") // empty, running, completed, failed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages    Message[]
+  sources     ConversationSource[]
+  sharedChats SharedChat[]
+  savedItems  SavedItem[]
+  collectionItems CollectionItem[]
 }
 
 model Message {
   id             String       @id @default(cuid())
-  role           String       // "user" or "assistant"
+  role           String       // "user", "assistant", "system"
   content        String
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sources        Source[]
-  followUps      String       @default("[]") // JSON string of follow-up questions
+  followUps      String       @default("[]") // JSON
+  model          String       @default("") // which model was used
+  tokens         Int          @default(0)
   createdAt      DateTime     @default(now())
 }
 
@@ -34,5 +78,187 @@ model Source {
   messageId String
   message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
   favicon   String  @default("")
+  domain    String  @default("")
   rank      Int     @default(0)
+  publishedAt String @default("")
+}
+
+model ConversationSource {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  title          String
+  url            String
+  snippet        String   @default("")
+  domain         String   @default("")
+  favicon        String   @default("")
+  summary        String   @default("")
+  relevanceScore Float    @default(0)
+  publishedAt    String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+// ─── COLLECTIONS & LIBRARY ───
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  color       String   @default("#06b6d4")
+  icon        String   @default("Folder")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items CollectionItem[]
+}
+
+model CollectionItem {
+  id             String   @id @default(cuid())
+  collectionId   String
+  collection     Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sourceUrl      String   @default("")
+  sourceTitle    String   @default("")
+  note           String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+model SavedItem {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  type           String   @default("chat") // chat, source, research
+  title          String   @default("")
+  url            String   @default("")
+  note           String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+// ─── SHARED CHATS ───
+
+model SharedChat {
+  id             String   @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug           String   @unique
+  isPublic       Boolean  @default(true)
+  expiresAt      DateTime?
+  accessCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+// ─── WORKSPACES & TEAMS ───
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("free")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members         TeamMember[]
+  conversations   Conversation[]
+  subscriptions   Subscription[]
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  role        String   @default("member") // owner, admin, member
+  invitedAt   DateTime @default(now())
+  acceptedAt  DateTime?
+}
+
+model TeamInvite {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  role        String   @default("member")
+  token       String   @unique
+  acceptedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}
+
+// ─── SUBSCRIPTIONS & BILLING ───
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId   String?
+  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  stripeId      String   @default("")
+  plan          String   @default("free") // free, pro, enterprise
+  status        String   @default("active") // active, cancelled, past_due
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime @default(now())
+  cancelAtPeriodEnd  Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ─── API KEYS ───
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  key         String   @unique
+  lastUsedAt  DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ─── USAGE LOGGING ───
+
+model UsageLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // search, chat, research, upload
+  model       String   @default("")
+  tokens      Int      @default(0)
+  sourceCount Int      @default(0)
+  duration    Int      @default(0) // ms
+  createdAt   DateTime @default(now())
+}
+
+// ─── FEEDBACK ───
+
+model Feedback {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId      String   @default("")
+  rating         Int      @default(0) // 1-5
+  comment        String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+// ─── ADMIN CONTENT ───
+
+model AdminContent {
+  id        String   @id @default(cuid())
+  type      String   // faq, blog_post, doc, announcement, feature_section, pricing
+  title     String
+  slug      String   @unique
+  content   String   @default("") // markdown or JSON
+  status    String   @default("draft") // draft, published, archived
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
