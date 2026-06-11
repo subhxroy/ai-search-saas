@@ -73,8 +73,8 @@ export default function ComparisonSection() {
           </p>
         </motion.div>
 
-        {/* Comparison Table */}
-        <div className="feature-card overflow-hidden p-0">
+        {/* Comparison Table - Desktop */}
+        <div className="hidden md:block feature-card overflow-hidden p-0">
           {/* Column Headers */}
           <div className="grid grid-cols-2" style={{ borderBottom: '1px solid var(--hairline)' }}>
             {/* Traditional Search */}
@@ -161,6 +161,51 @@ export default function ComparisonSection() {
                     {comparison.label}
                   </span>
                   <span className="body-sm">
+                    {comparison.nexus}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Comparison Cards - Mobile */}
+        <div className="md:hidden space-y-3">
+          {COMPARISONS.map((comparison, index) => (
+            <motion.div
+              key={comparison.label}
+              variants={rowVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ delay: index * 0.05 }}
+              className="feature-card-bordered p-4"
+            >
+              <div className="body-sm mb-3" style={{ color: 'var(--ink)', fontWeight: 500 }}>
+                {comparison.label}
+              </div>
+              <div className="space-y-2">
+                {/* Traditional */}
+                <div className="flex items-center gap-2.5" style={{ opacity: 0.6 }}>
+                  <div
+                    className="h-5 w-5 rounded flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(255,32,71,0.1)' }}
+                  >
+                    <X className="h-3 w-3" style={{ color: 'var(--accent-red)' }} />
+                  </div>
+                  <span className="body-sm" style={{ color: 'var(--ash)' }}>
+                    {comparison.traditional}
+                  </span>
+                </div>
+                {/* Nexus */}
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="h-5 w-5 rounded flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(17,255,153,0.1)' }}
+                  >
+                    <Check className="h-3 w-3" style={{ color: 'var(--accent-green)' }} />
+                  </div>
+                  <span className="body-sm" style={{ color: 'var(--ink)' }}>
                     {comparison.nexus}
                   </span>
                 </div>

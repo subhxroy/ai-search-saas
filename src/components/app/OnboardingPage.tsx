@@ -107,41 +107,48 @@ function ChoiceCard({
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
-      className={`relative flex flex-col items-center gap-3 p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${
-        selected
-          ? 'glass-strong border-cyan-500/30 shadow-lg shadow-cyan-500/10'
-          : 'glass border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
-      }`}
+      className="relative flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 cursor-pointer"
+      style={{
+        background: selected
+          ? 'var(--surface-elevated)'
+          : 'var(--surface-card)',
+        borderColor: selected
+          ? 'var(--accent-blue)'
+          : 'var(--hairline)',
+      }}
     >
       {/* Selected indicator */}
       {selected && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute top-2.5 right-2.5 h-5 w-5 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center"
+          className="absolute top-2.5 right-2.5 h-5 w-5 rounded-full flex items-center justify-center"
+          style={{ background: 'var(--accent-blue)' }}
         >
-          <Check className="h-3 w-3 text-white" />
+          <Check className="h-3 w-3" style={{ color: '#000000' }} />
         </motion.div>
       )}
 
       <div
-        className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-          selected
-            ? 'bg-gradient-to-br from-cyan-500/20 to-purple-500/20 ring-1 ring-cyan-500/20'
-            : 'bg-white/[0.04] ring-1 ring-white/[0.06]'
-        }`}
+        className="h-12 w-12 rounded-xl flex items-center justify-center transition-colors duration-200"
+        style={{
+          background: selected
+            ? 'var(--surface-card)'
+            : 'var(--surface-elevated)',
+          border: selected
+            ? '1px solid var(--hairline-strong)'
+            : '1px solid var(--hairline)',
+        }}
       >
         <Icon
-          className={`h-6 w-6 transition-colors duration-300 ${
-            selected ? 'text-cyan-400' : 'text-muted-foreground'
-          }`}
+          className="h-6 w-6 transition-colors duration-200"
+          style={{ color: selected ? 'var(--accent-blue)' : 'var(--ash)' }}
         />
       </div>
 
       <span
-        className={`text-sm font-medium text-center leading-tight transition-colors duration-300 ${
-          selected ? 'text-foreground' : 'text-muted-foreground'
-        }`}
+        className="text-sm font-medium text-center leading-tight transition-colors duration-200"
+        style={{ color: selected ? 'var(--ink)' : 'var(--ash)' }}
       >
         {item.label}
       </span>
@@ -162,8 +169,8 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
               width: i === current ? 28 : 8,
               backgroundColor:
                 i <= current
-                  ? 'rgba(6,182,212,0.9)'
-                  : 'rgba(255,255,255,0.08)',
+                  ? 'var(--accent-blue)'
+                  : 'var(--hairline)',
             }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="h-2 rounded-full"
@@ -234,27 +241,30 @@ export default function OnboardingPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
-      {/* Background orbs */}
+      {/* Background atmospheric glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute -top-32 -left-32 w-96 h-96 rounded-full animate-float-1"
           style={{
             background:
-              'radial-gradient(circle, rgba(6,182,212,0.10) 0%, transparent 70%)',
+              'radial-gradient(circle, var(--accent-blue-glow) 0%, transparent 70%)',
+            opacity: 0.4,
           }}
         />
         <div
           className="absolute -bottom-40 -right-40 w-[28rem] h-[28rem] rounded-full animate-float-2"
           style={{
             background:
-              'radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%)',
+              'radial-gradient(circle, var(--accent-orange-glow) 0%, transparent 70%)',
+            opacity: 0.4,
           }}
         />
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] rounded-full animate-float-3"
           style={{
             background:
-              'radial-gradient(circle, rgba(6,182,212,0.04) 0%, transparent 60%)',
+              'radial-gradient(circle, var(--accent-blue-glow) 0%, transparent 60%)',
+            opacity: 0.15,
           }}
         />
       </div>
@@ -267,10 +277,22 @@ export default function OnboardingPage() {
           transition={{ duration: 0.4 }}
           className="flex items-center justify-center gap-2.5 mb-8"
         >
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-white/10">
-            <Sparkles className="h-5 w-5 text-cyan-400" />
+          <div
+            className="h-10 w-10 rounded-xl flex items-center justify-center"
+            style={{
+              background: 'var(--surface-card)',
+              border: '1px solid var(--hairline-strong)',
+            }}
+          >
+            <Sparkles
+              className="h-5 w-5"
+              style={{ color: 'var(--accent-blue)' }}
+            />
           </div>
-          <span className="text-xl font-bold tracking-tight gradient-text">
+          <span
+            className="text-xl font-bold tracking-tight"
+            style={{ color: 'var(--ink)' }}
+          >
             Nexus AI
           </span>
         </motion.div>
@@ -290,7 +312,8 @@ export default function OnboardingPage() {
           initial={{ opacity: 0, y: 20, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="glass-strong rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/30"
+          className="feature-card-bordered"
+          style={{ padding: '24px 32px' }}
         >
           {/* ---- Step content ---- */}
           <AnimatePresence mode="wait" custom={direction}>
@@ -305,10 +328,12 @@ export default function OnboardingPage() {
             >
               {/* Step heading */}
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-1.5">
+                <h2
+                  className="heading-md mb-1.5"
+                >
                   {stepMeta[step].title}
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="body-sm">
                   {stepMeta[step].subtitle}
                 </p>
               </div>
@@ -335,7 +360,10 @@ export default function OnboardingPage() {
           </AnimatePresence>
 
           {/* ---- Navigation ---- */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/[0.06]">
+          <div
+            className="flex items-center justify-between mt-8 pt-6"
+            style={{ borderTop: '1px solid var(--hairline)' }}
+          >
             {/* Back */}
             <div>
               {step > 0 ? (
@@ -343,7 +371,8 @@ export default function OnboardingPage() {
                   type="button"
                   variant="ghost"
                   onClick={goBack}
-                  className="gap-1.5 text-muted-foreground hover:text-foreground"
+                  className="gap-1.5"
+                  style={{ color: 'var(--ash)' }}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Back
@@ -357,40 +386,36 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={handleSkip}
-              className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              className="text-xs transition-colors"
+              style={{ color: 'var(--stone)' }}
             >
               Skip
             </button>
 
             {/* Next / Get Started */}
             {step < totalSteps - 1 ? (
-              <Button
+              <button
                 type="button"
                 onClick={goNext}
                 disabled={!hasSelection}
-                className="gap-1.5 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20 disabled:opacity-40"
+                className="btn-primary gap-1.5 inline-flex items-center justify-center"
                 style={{
-                  background: hasSelection
-                    ? 'linear-gradient(135deg, rgba(6,182,212,0.9), rgba(139,92,246,0.9))'
-                    : undefined,
+                  opacity: hasSelection ? 1 : 0.4,
+                  cursor: hasSelection ? 'pointer' : 'not-allowed',
                 }}
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
-              </Button>
+              </button>
             ) : (
-              <Button
+              <button
                 type="button"
                 onClick={handleGetStarted}
-                className="gap-1.5 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(6,182,212,0.9), rgba(139,92,246,0.9))',
-                }}
+                className="btn-primary gap-1.5 inline-flex items-center justify-center"
               >
                 Get Started
                 <UserPlus className="h-4 w-4" />
-              </Button>
+              </button>
             )}
           </div>
         </motion.div>

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 
 const itemVariants = {
   hidden: { opacity: 0, y: 40 },
@@ -45,7 +46,7 @@ export default function FinalCTASection() {
 
         {/* CTA Button — the single bright white pixel */}
         <motion.div variants={itemVariants}>
-          <button className="btn-primary inline-flex items-center gap-2" style={{ height: '44px', padding: '0 24px', fontSize: '15px' }}>
+          <button className="btn-primary inline-flex items-center gap-2" style={{ height: '44px', padding: '0 24px', fontSize: '15px' }} onClick={() => useAppStore.getState().navigate('signup')}>
             Get Started
             <ArrowRight className="h-4 w-4" />
           </button>

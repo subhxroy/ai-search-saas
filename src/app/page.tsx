@@ -5,6 +5,7 @@ import { useAppStore } from '@/store/app-store'
 import AppShell from '@/components/app/AppShell'
 import LoginPage from '@/components/auth/LoginPage'
 import SignupPage from '@/components/auth/SignupPage'
+import ForgotPasswordPage from '@/components/auth/ForgotPasswordPage'
 import HeroSection from '@/components/landing/HeroSection'
 import AIDemoSection from '@/components/landing/AIDemoSection'
 import WhyThisProductSection from '@/components/landing/WhyThisProductSection'
@@ -32,62 +33,7 @@ export default function Home() {
   if (page === 'login') return <LoginPage />
   if (page === 'signup') return <SignupPage />
   if (page === 'forgot-password') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#000000' }}>
-        <div
-          className="max-w-md w-full text-center space-y-6 p-8"
-          style={{
-            background: '#0a0a0c',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: '12px',
-          }}
-        >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '8px',
-              background: 'rgba(255,255,255,0.06)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto',
-            }}
-          >
-            <Search style={{ width: 20, height: 20, color: '#3b9eff' }} />
-          </div>
-          <h1
-            style={{
-              fontFamily: 'var(--font-serif), Georgia, serif',
-              fontSize: '28px',
-              fontWeight: 400,
-              lineHeight: 1.1,
-              color: '#fcfdff',
-            }}
-          >
-            Reset Password
-          </h1>
-          <p className="body-sm" style={{ color: '#a1a4a5' }}>
-            Enter your email and we&apos;ll send you a reset link.
-          </p>
-          <input
-            type="email"
-            placeholder="your@email.com"
-            className="text-input w-full"
-          />
-          <button className="btn-primary w-full" style={{ height: 44 }}>
-            Send Reset Link
-          </button>
-          <button
-            onClick={() => navigate('login')}
-            className="nav-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            Back to sign in
-          </button>
-        </div>
-      </div>
-    )
+    return <ForgotPasswordPage />
   }
 
   // ─── Authenticated pages (with app shell) ───
@@ -232,12 +178,18 @@ export default function Home() {
             {['Features', 'Pricing', 'Docs', 'Customers'].map((label) => (
               <a
                 key={label}
-                href={label === 'Pricing' ? '#pricing' : '#'}
+                href="#"
                 className="nav-link"
                 onClick={(e) => {
-                  if (label === 'Pricing') {
-                    e.preventDefault()
+                  e.preventDefault()
+                  if (label === 'Features') {
+                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
+                  } else if (label === 'Pricing') {
                     document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+                  } else if (label === 'Customers') {
+                    document.getElementById('customers')?.scrollIntoView({ behavior: 'smooth' })
+                  } else if (label === 'Docs') {
+                    navigate('signup')
                   }
                 }}
               >
@@ -271,9 +223,13 @@ export default function Home() {
           <HeroSection onSearch={handleSearch} />
         </div>
         <AIDemoSection />
-        <WhyThisProductSection />
+        <div id="features">
+          <WhyThisProductSection />
+        </div>
         <ComparisonSection />
-        <SocialProofSection />
+        <div id="customers">
+          <SocialProofSection />
+        </div>
         <div id="pricing">
           <PricingSection />
         </div>

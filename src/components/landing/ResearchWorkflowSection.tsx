@@ -92,25 +92,7 @@ const verticalLineVariants = {
 
 export default function ResearchWorkflowSection() {
   return (
-    <section className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden">
-      {/* Background accent */}
-      <div
-        className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)',
-          filter: 'blur(100px)',
-        }}
-      />
-      <div
-        className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full opacity-10 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(103,232,249,0.25) 0%, transparent 70%)',
-          filter: 'blur(100px)',
-        }}
-      />
-
+    <section className="glow-blue relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div
@@ -120,17 +102,12 @@ export default function ResearchWorkflowSection() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-            From Question to Answer
-          </h2>
+          <h2 className="display-lg mb-4">From Question to Answer</h2>
           <div
-            className="mx-auto w-32 h-1 rounded-full mb-5 animate-gradient"
-            style={{
-              background: 'linear-gradient(90deg, #06b6d4, #8b5cf6, #06b6d4)',
-              backgroundSize: '200% 100%',
-            }}
+            className="mx-auto w-32 h-1 rounded-full mb-5"
+            style={{ background: 'var(--accent-blue)' }}
           />
-          <p className="text-muted-foreground text-base sm:text-lg max-w-lg mx-auto">
+          <p className="body-md max-w-lg mx-auto">
             Five steps. Ten seconds. Complete clarity.
           </p>
         </motion.div>
@@ -145,10 +122,11 @@ export default function ResearchWorkflowSection() {
                 return (
                   <motion.div
                     key={`line-h-${i}`}
-                    className="timeline-line absolute top-0 h-full rounded-full"
+                    className="absolute top-0 h-full rounded-full"
                     style={{
                       left: `${i * segmentWidth}%`,
                       width: `${segmentWidth}%`,
+                      background: 'var(--hairline-strong)',
                     }}
                     custom={i}
                     variants={lineVariants}
@@ -172,32 +150,41 @@ export default function ResearchWorkflowSection() {
                 className="flex flex-col items-center text-center relative z-10"
                 style={{ width: `${100 / STEPS.length}%` }}
               >
-                {/* Numbered circle with glow */}
+                {/* Numbered circle */}
                 <div className="relative mb-5">
                   <div
-                    className="absolute inset-0 rounded-full animate-glow-pulse"
+                    className="rounded-full h-14 w-14 flex items-center justify-center"
                     style={{
-                      background:
-                        'radial-gradient(circle, rgba(103,232,249,0.25) 0%, transparent 70%)',
-                      filter: 'blur(8px)',
-                      transform: 'scale(1.8)',
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--hairline-strong)',
                     }}
-                  />
-                  <div className="relative glass-strong rounded-full h-14 w-14 flex items-center justify-center border border-cyan-500/20">
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-cyan-500 text-[10px] font-bold text-white flex items-center justify-center">
+                  >
+                    <span
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full text-[10px] font-bold flex items-center justify-center"
+                      style={{
+                        background: 'var(--accent-blue)',
+                        color: 'var(--primary-on)',
+                      }}
+                    >
                       {i + 1}
                     </span>
-                    <step.icon className="h-5 w-5 text-cyan-400" />
+                    <step.icon className="h-5 w-5" style={{ color: 'var(--accent-blue)' }} />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-sm font-semibold text-foreground mb-2 leading-snug">
+                <h3
+                  className="text-sm font-semibold mb-2 leading-snug"
+                  style={{ color: 'var(--ink)' }}
+                >
                   {step.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs text-muted-foreground leading-relaxed max-w-[180px]">
+                <p
+                  className="text-xs leading-relaxed max-w-[180px]"
+                  style={{ color: 'var(--ash)' }}
+                >
                   {step.description}
                 </p>
               </motion.div>
@@ -215,10 +202,11 @@ export default function ResearchWorkflowSection() {
                 return (
                   <motion.div
                     key={`line-v-${i}`}
-                    className="timeline-line absolute w-full rounded-full"
+                    className="absolute w-full rounded-full"
                     style={{
                       top: `${i * segmentHeight}%`,
                       height: `${segmentHeight}%`,
+                      background: 'var(--hairline-strong)',
                     }}
                     custom={i}
                     variants={verticalLineVariants}
@@ -241,31 +229,40 @@ export default function ResearchWorkflowSection() {
                 viewport={{ once: true, amount: 0.2 }}
                 className="relative flex items-start gap-4 sm:gap-5 mb-10 last:mb-0"
               >
-                {/* Numbered circle with glow */}
+                {/* Numbered circle */}
                 <div className="relative shrink-0 -ml-10 sm:-ml-14">
                   <div
-                    className="absolute inset-0 rounded-full animate-glow-pulse"
+                    className="rounded-full h-9 w-9 sm:h-11 sm:w-11 flex items-center justify-center"
                     style={{
-                      background:
-                        'radial-gradient(circle, rgba(103,232,249,0.25) 0%, transparent 70%)',
-                      filter: 'blur(8px)',
-                      transform: 'scale(2)',
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--hairline-strong)',
                     }}
-                  />
-                  <div className="relative glass-strong rounded-full h-9 w-9 sm:h-11 sm:w-11 flex items-center justify-center border border-cyan-500/20">
-                    <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-cyan-500 text-[9px] sm:text-[10px] font-bold text-white flex items-center justify-center">
+                  >
+                    <span
+                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full text-[9px] sm:text-[10px] font-bold flex items-center justify-center"
+                      style={{
+                        background: 'var(--accent-blue)',
+                        color: 'var(--primary-on)',
+                      }}
+                    >
                       {i + 1}
                     </span>
-                    <step.icon className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
+                    <step.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: 'var(--accent-blue)' }} />
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="glass feature-card rounded-xl p-4 sm:p-5 flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1.5 leading-snug">
+                <div className="feature-card-bordered flex-1 min-w-0" style={{ padding: '16px 20px' }}>
+                  <h3
+                    className="text-sm sm:text-base font-semibold mb-1.5 leading-snug"
+                    style={{ color: 'var(--ink)' }}
+                  >
                     {step.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  <p
+                    className="text-xs sm:text-sm leading-relaxed"
+                    style={{ color: 'var(--ash)' }}
+                  >
                     {step.description}
                   </p>
                 </div>

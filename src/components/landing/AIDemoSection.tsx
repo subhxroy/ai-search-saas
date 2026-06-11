@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 
 const CODE_CONTENT = `const response = await nexus.search({
   query: "Best AI startups 2026",
@@ -165,6 +166,7 @@ export default function AIDemoSection() {
 
   return (
     <section
+      id="ai-demo"
       ref={sectionRef}
       className="glow-blue"
       style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}
@@ -212,7 +214,10 @@ export default function AIDemoSection() {
             ))}
 
             <div className="pt-4">
-              <button className="btn-primary gap-2">
+              <button
+                className="btn-primary gap-2"
+                onClick={() => useAppStore.getState().navigate('signup')}
+              >
                 Try it free
                 <ArrowRight className="h-4 w-4" />
               </button>

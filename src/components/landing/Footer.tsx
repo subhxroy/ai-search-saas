@@ -2,14 +2,32 @@
 
 import { motion } from 'framer-motion'
 import { Github, Twitter, Linkedin } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 
 /* ────────────────────────────────────────────
    Data
    ──────────────────────────────────────────── */
 
-const PRODUCT_LINKS = ['Features', 'Pricing', 'API', 'Changelog']
-const RESOURCE_LINKS = ['Blog', 'Documentation', 'Community', 'Support']
-const LEGAL_LINKS = ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'Security']
+const PRODUCT_LINKS = [
+  { label: 'Features', action: 'scroll-features' as const },
+  { label: 'Pricing', action: 'scroll-pricing' as const },
+  { label: 'API', action: 'signup' as const },
+  { label: 'Changelog', action: 'signup' as const },
+]
+
+const RESOURCE_LINKS = [
+  { label: 'Blog', action: 'signup' as const },
+  { label: 'Documentation', action: 'signup' as const },
+  { label: 'Community', action: 'signup' as const },
+  { label: 'Support', action: 'signup' as const },
+]
+
+const LEGAL_LINKS = [
+  { label: 'Privacy Policy', action: 'signup' as const },
+  { label: 'Terms of Service', action: 'signup' as const },
+  { label: 'Cookie Policy', action: 'signup' as const },
+  { label: 'Security', action: 'signup' as const },
+]
 
 const SOCIAL_LINKS = [
   { icon: Github, label: 'GitHub', href: '#' },
@@ -53,9 +71,21 @@ function LinkColumn({
   index,
 }: {
   heading: string
-  links: string[]
+  links: { label: string; action: 'scroll-features' | 'scroll-pricing' | 'signup' }[]
   index: number
 }) {
+  const navigate = useAppStore.getState().navigate
+
+  const handleClick = (action: 'scroll-features' | 'scroll-pricing' | 'signup') => {
+    if (action === 'scroll-features') {
+      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
+    } else if (action === 'scroll-pricing') {
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('signup')
+    }
+  }
+
   return (
     <motion.div
       custom={index}
@@ -79,9 +109,13 @@ function LinkColumn({
       </h4>
       <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', margin: 0, padding: 0 }}>
         {links.map((link) => (
-          <li key={link}>
+          <li key={link.label}>
             <a
               href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                handleClick(link.action)
+              }}
               style={{
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
                 fontSize: '14px',
@@ -98,7 +132,7 @@ function LinkColumn({
                 ;(e.target as HTMLElement).style.color = 'var(--ash)'
               }}
             >
-              {link}
+              {link.label}
             </a>
           </li>
         ))}
@@ -128,13 +162,7 @@ export default function Footer() {
       >
         {/* ── 4-column grid ── */}
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '32px',
-            marginBottom: '48px',
-          }}
-          className="max-sm:grid-cols-2 max-sm:gap-8"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-8 mb-12"
         >
           {/* Brand column */}
           <motion.div
@@ -143,7 +171,7 @@ export default function Footer() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
-            className="max-sm:col-span-2"
+            className="col-span-2 sm:col-span-1"
           >
             {/* Wordmark */}
             <span className="heading-sm" style={{ display: 'block', marginBottom: '12px' }}>
@@ -209,12 +237,10 @@ export default function Footer() {
 
         {/* ── Copyright row ── */}
         <div
+          className="flex flex-col sm:flex-row items-center gap-4 sm:gap-0"
           style={{
-            display: 'flex',
-            alignItems: 'center',
             justifyContent: 'space-between',
           }}
-          className="max-sm:flex-col max-sm:gap-4"
         >
           {/* Copyright */}
           <span

@@ -241,9 +241,8 @@ export default function ChatView() {
       {/* Bottom search input - continues conversation */}
       <div
         style={{
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(0,0,0,0.9)',
-          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid var(--hairline)',
+          background: 'var(--canvas)',
           padding: '16px',
         }}
       >

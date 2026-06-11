@@ -170,44 +170,83 @@ export default function DashboardPage() {
     >
       {/* ======== WELCOME HEADER ======== */}
       <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          {getGreeting()}, <span className="gradient-text">{userName}</span>
+        <h1 className="heading-md" style={{ fontSize: 'clamp(22px, 3vw, 30px)', lineHeight: 1.3 }}>
+          {getGreeting()},{' '}
+          <span style={{ fontFamily: 'var(--font-serif), Georgia, Times New Roman, serif', color: 'var(--ink)' }}>
+            {userName}
+          </span>
         </h1>
-        <p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+        <p className="body-sm mt-1.5" style={{ color: 'var(--charcoal)' }}>
           What would you like to research today?
         </p>
       </motion.div>
 
       {/* ======== SEARCH BAR ======== */}
       <motion.div variants={itemVariants} className="mb-8">
-        <form onSubmit={onSearch} className="relative max-w-2xl mx-auto">
-          <div className="glass-strong search-glow glow-border rounded-2xl flex items-center gap-3 px-5 py-3.5">
-            <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+        <form onSubmit={onSearch} className="max-w-2xl mx-auto">
+          <div
+            style={{
+              background: 'var(--surface-card)',
+              border: '1px solid var(--hairline-strong)',
+              borderRadius: '8px',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '0 16px',
+              transition: 'border-color 0.15s ease',
+            }}
+            className="group"
+          >
+            <Search
+              className="h-4 w-4 shrink-0"
+              style={{ color: 'var(--ash)' }}
+            />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask anything... get answers with sources"
-              className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none text-base"
+              className="flex-1 bg-transparent outline-none text-base"
+              style={{
+                color: 'var(--ink)',
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              }}
               disabled={isLoading}
             />
             {/* Deep research toggle */}
-            <div className="flex items-center gap-2 shrink-0 border-l border-border/50 pl-3">
-              <Telescope className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground hidden sm:inline">
+            <div
+              className="flex items-center gap-2 shrink-0"
+              style={{ borderLeft: '1px solid var(--hairline)', paddingLeft: '12px' }}
+            >
+              <Telescope
+                className="h-3.5 w-3.5"
+                style={{ color: 'var(--ash)' }}
+              />
+              <span
+                className="text-xs hidden sm:inline"
+                style={{ color: 'var(--ash)' }}
+              >
                 Deep
               </span>
               <Switch
                 checked={isDeepResearch}
                 onCheckedChange={setIsDeepResearch}
-                className="data-[state=checked]:bg-cyan-600"
+                style={{ backgroundColor: isDeepResearch ? 'var(--accent-blue)' : undefined }}
               />
             </div>
             {/* Submit button */}
             <button
               type="submit"
               disabled={!query.trim() || isLoading}
-              className="shrink-0 h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white disabled:opacity-40 transition-opacity"
+              className="btn-primary shrink-0"
+              style={{
+                height: '32px',
+                width: '32px',
+                padding: 0,
+                borderRadius: '6px',
+                minWidth: '32px',
+              }}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -227,30 +266,34 @@ export default function DashboardPage() {
               setQuery('')
               navigate('chat')
             }}
-            className="glass rounded-full px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 transition-all flex items-center gap-2"
+            className="btn-ghost"
+            style={{ borderRadius: '9999px', gap: '8px' }}
           >
-            <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+            <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--accent-blue)' }} />
             Start New Research
           </button>
           <button
             onClick={() => setIsDeepResearch(!isDeepResearch)}
-            className="glass rounded-full px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 transition-all flex items-center gap-2"
+            className="btn-ghost"
+            style={{ borderRadius: '9999px', gap: '8px' }}
           >
-            <Telescope className="h-3.5 w-3.5 text-purple-400" />
+            <Telescope className="h-3.5 w-3.5" style={{ color: 'var(--accent-orange)' }} />
             Deep Research Mode
           </button>
           <button
             onClick={() => navigate('history')}
-            className="glass rounded-full px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 transition-all flex items-center gap-2"
+            className="btn-ghost"
+            style={{ borderRadius: '9999px', gap: '8px' }}
           >
-            <Clock className="h-3.5 w-3.5 text-amber-400" />
+            <Clock className="h-3.5 w-3.5" style={{ color: 'var(--accent-yellow)' }} />
             Browse History
           </button>
           <button
             onClick={() => navigate('collections')}
-            className="glass rounded-full px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 transition-all flex items-center gap-2"
+            className="btn-ghost"
+            style={{ borderRadius: '9999px', gap: '8px' }}
           >
-            <FolderOpen className="h-3.5 w-3.5 text-emerald-400" />
+            <FolderOpen className="h-3.5 w-3.5" style={{ color: 'var(--accent-green)' }} />
             View Collections
           </button>
         </div>
@@ -259,10 +302,18 @@ export default function DashboardPage() {
       {/* ======== RECENT CONVERSATIONS ======== */}
       <motion.div variants={itemVariants} className="mb-10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent</h2>
+          <h2 className="heading-sm" style={{ fontSize: '18px' }}>Recent</h2>
           <button
             onClick={() => navigate('history')}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            className="flex items-center gap-1"
+            style={{
+              color: 'var(--ash)',
+              fontSize: '13px',
+              fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ash)')}
           >
             View All
             <ArrowRight className="h-3 w-3" />
@@ -274,11 +325,35 @@ export default function DashboardPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="glass rounded-xl p-4 animate-pulse"
+                className="feature-card-bordered animate-pulse"
+                style={{ padding: '16px' }}
               >
-                <div className="h-4 w-3/4 bg-white/5 rounded mb-2" />
-                <div className="h-3 w-1/2 bg-white/5 rounded mb-3" />
-                <div className="h-3 w-1/3 bg-white/5 rounded" />
+                <div
+                  className="mb-2"
+                  style={{
+                    height: '16px',
+                    width: '75%',
+                    background: 'var(--surface-elevated)',
+                    borderRadius: '4px',
+                  }}
+                />
+                <div
+                  className="mb-3"
+                  style={{
+                    height: '12px',
+                    width: '50%',
+                    background: 'var(--surface-elevated)',
+                    borderRadius: '4px',
+                  }}
+                />
+                <div
+                  style={{
+                    height: '12px',
+                    width: '33%',
+                    background: 'var(--surface-elevated)',
+                    borderRadius: '4px',
+                  }}
+                />
               </div>
             ))}
           </div>
@@ -290,20 +365,37 @@ export default function DashboardPage() {
                 onClick={() => {
                   navigate('chat', { id: conv.id })
                 }}
-                className="glass rounded-xl p-4 text-left hover:bg-accent/40 transition-all group feature-card"
+                className="feature-card-bordered text-left group"
+                style={{ padding: '16px', cursor: 'pointer' }}
               >
                 <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <h3 className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-cyan-400 transition-colors">
+                  <h3
+                    className="text-sm font-medium line-clamp-1"
+                    style={{
+                      color: 'var(--ink)',
+                      fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                      transition: 'color 0.15s ease',
+                    }}
+                  >
                     {conv.title}
                   </h3>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight
+                    className="h-3.5 w-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ color: 'var(--ash)' }}
+                  />
                 </div>
                 {conv.preview && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5">
+                  <p
+                    className="text-xs line-clamp-2 mb-2.5"
+                    style={{ color: 'var(--charcoal)' }}
+                  >
                     {conv.preview}
                   </p>
                 )}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div
+                  className="flex items-center gap-3 text-xs"
+                  style={{ color: 'var(--ash)' }}
+                >
                   <span>{formatDate(conv.date)}</span>
                   <span className="flex items-center gap-1">
                     <MessageSquare className="h-3 w-3" />
@@ -314,10 +406,23 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="glass rounded-xl p-8 text-center">
-            <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No conversations yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
+          <div
+            className="feature-card-bordered text-center"
+            style={{ padding: '32px' }}
+          >
+            <MessageSquare
+              className="h-8 w-8 mx-auto mb-2"
+              style={{ color: 'var(--ash)' }}
+            />
+            <p className="body-sm" style={{ color: 'var(--charcoal)' }}>No conversations yet</p>
+            <p
+              className="mt-1"
+              style={{
+                color: 'var(--stone)',
+                fontSize: '13px',
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              }}
+            >
               Start a search to begin your first research session
             </p>
           </div>
@@ -326,14 +431,32 @@ export default function DashboardPage() {
 
       {/* ======== TRENDING TOPICS ======== */}
       <motion.div variants={itemVariants} className="mb-10">
-        <h2 className="text-lg font-semibold mb-4">Trending Topics</h2>
+        <h2 className="heading-sm mb-4" style={{ fontSize: '18px' }}>Trending Topics</h2>
         <div className="flex flex-wrap gap-2">
           {trendingTopics.map((topic) => (
             <button
               key={topic}
               onClick={() => onTopicClick(topic)}
               disabled={isLoading}
-              className="glass rounded-full px-3.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-all disabled:opacity-50"
+              className="badge-pill"
+              style={{
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.5 : 1,
+                transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
+                border: '1px solid var(--hairline)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.color = 'var(--ink)'
+                  e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                  e.currentTarget.style.background = 'var(--surface-card)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--charcoal)'
+                e.currentTarget.style.borderColor = 'var(--hairline)'
+                e.currentTarget.style.background = 'var(--surface-elevated)'
+              }}
             >
               {topic}
             </button>
@@ -343,11 +466,23 @@ export default function DashboardPage() {
 
       {/* ======== USAGE STATS ======== */}
       <motion.div variants={itemVariants}>
-        <div className="glass rounded-xl px-4 py-3 flex items-center justify-between text-xs text-muted-foreground">
+        <div
+          className="feature-card-bordered flex items-center justify-between"
+          style={{ padding: '12px 16px' }}
+        >
           <div className="flex items-center gap-2">
-            <Zap className="h-3.5 w-3.5 text-cyan-400" />
-            <span>
-              <span className="font-medium text-foreground">
+            <Zap
+              className="h-3.5 w-3.5"
+              style={{ color: 'var(--accent-blue)' }}
+            />
+            <span
+              style={{
+                color: 'var(--ash)',
+                fontSize: '13px',
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              }}
+            >
+              <span style={{ color: 'var(--ink)', fontWeight: 500 }}>
                 {currentUser?.plan === 'pro'
                   ? 'Pro Plan'
                   : currentUser?.plan === 'enterprise'
@@ -361,7 +496,15 @@ export default function DashboardPage() {
           {(currentUser?.plan === 'free' || !currentUser?.plan) && (
             <button
               onClick={() => navigate('billing')}
-              className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              style={{
+                color: 'var(--accent-blue)',
+                fontWeight: 500,
+                fontSize: '13px',
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--accent-blue)')}
             >
               Upgrade
             </button>

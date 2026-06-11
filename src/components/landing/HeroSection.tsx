@@ -201,7 +201,11 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           >
             Start Searching
           </button>
-          <button className="btn-ghost" style={{ padding: '8px 20px' }}>
+          <button
+            className="btn-ghost"
+            style={{ padding: '8px 20px' }}
+            onClick={() => document.getElementById('ai-demo')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             Watch Demo
           </button>
         </motion.div>

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 
 interface PricingTier {
   name: string
@@ -151,15 +152,15 @@ export default function PricingSection() {
 
               {/* CTA Button */}
               {tier.variant === 'pro' ? (
-                <button className="btn-primary w-full">
+                <button className="btn-primary w-full" onClick={() => useAppStore.getState().navigate('signup')}>
                   {tier.cta}
                 </button>
               ) : tier.variant === 'free' ? (
-                <button className="btn-outline w-full">
+                <button className="btn-outline w-full" onClick={() => useAppStore.getState().navigate('signup')}>
                   {tier.cta}
                 </button>
               ) : (
-                <button className="btn-ghost w-full">
+                <button className="btn-ghost w-full" onClick={() => useAppStore.getState().navigate('signup')}>
                   {tier.cta}
                 </button>
               )}
