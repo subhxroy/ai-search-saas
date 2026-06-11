@@ -333,10 +333,10 @@ function LandingNavbar({ variant = 'landing' }: { variant?: 'landing' | 'chat' }
 /* ------------------------------------------------------------------ */
 
 const SUGGESTED_QUERIES = [
-  'What is quantum computing?',
-  'Latest AI breakthroughs 2026',
-  'How does CRISPR gene editing work?',
-  'Best programming languages to learn',
+  'Best smartphones under 15k',
+  'Top mutual funds for SIP 2026',
+  'How to file ITR online',
+  'Best laptops under 50k India',
 ]
 
 function EmptyChatState() {

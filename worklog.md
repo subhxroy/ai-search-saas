@@ -509,3 +509,252 @@ Stage Summary:
 - Hover effects on feature cards and FAQ accordion items for subtle interactivity
 - Per-feature accent colors for visual variety in WhyThisProductSection
 - Clean lint, clean compilation
+
+---
+Task ID: 4
+Agent: Landing Page India Localization & Polish Agent
+Task: Polish Landing Page sections to production-grade quality with India-relevant content
+
+Work Log:
+- Read worklog.md and all 8 target landing page files + globals.css
+- WhyThisProductSection.tsx: Updated all 8 feature descriptions with India-relevant content — Indian government portals, RBI reports, Hindi/English multilingual support, GST implications, SEBI regulations, Aadhaar uploads, slower connection optimization; Updated section subtitle to reference IIT research and UPSC prep
+- ComparisonSection.tsx: Added "Language Support" comparison row (English-only vs English/Hindi/multilingual); Updated Source Credibility to mention RBI, SEBI sources; Updated section subtitle to mention India's researchers and professionals
+- SocialProofSection.tsx: Replaced all 3 testimonials with Indian professionals — Adv. Arjun Mehta (Corporate Lawyer at Shardul Amarchand), Sneha Reddy (UPSC Aspirant at IAS Academy), Rohan Krishnan (Senior Analyst at Infosys); Updated stats to use Indian numbering (2L+ researchers instead of 500K+); Updated section title to "Trusted by India's best" and subtitle to reference UPSC aspirants and IIT researchers
+- PricingSection.tsx: Changed pricing from USD to INR — ₹0 (Free), ₹499/month (Pro), Custom (Enterprise); Updated subtitle to mention "All prices in INR"
+- FAQSection.tsx: Added 2 new India-specific FAQs — "What payment methods do you accept?" (UPI, GPay, PhonePe, Paytm, cards, net banking) and "Is my data stored in India?" (DPDP Act 2023 compliance); Updated existing answers with India-relevant references — RBI reports, Supreme Court judgments, India Code, PRS India, GST compliance, UPSC topics, CA audit reports, ₹499/month pricing
+- FinalCTASection.tsx: Updated subtitle to "Join lakhs of researchers, developers, and thinkers across India"; Changed "No credit card required" to "No credit card or UPI required"
+- ResearchWorkflowSection.tsx: Updated step descriptions with India-relevant content — English or Hindi queries, Indian and global sources, Indian context in answers, gazettes to journals; Fixed section spacing from `py-24 sm:py-32` to `var(--spacing-section)` for consistency with other sections
+- Footer.tsx: Updated brand description to "understands Indian context"; Added "Bengaluru, India" location text below status indicator; Updated copyright to "Made in India. All rights reserved."
+- ESLint check passes cleanly
+- Next.js build compiles successfully with zero errors
+
+Stage Summary:
+- All 8 landing page sections polished with India-relevant content, INR pricing, Indian testimonials
+- Pricing now shows ₹0/₹499/Custom instead of $0/$20/Custom
+- Testimonials feature Indian professionals (lawyer, UPSC aspirant, analyst)
+- FAQ includes UPI payments and DPDP Act compliance questions
+- Stats use Indian numbering system (2L+ instead of 500K+)
+- ResearchWorkflowSection spacing normalized to var(--spacing-section)
+- Footer shows Bengaluru, India location and "Made in India" copyright
+- Clean build, clean lint, zero errors
+
+---
+Task ID: 5
+Agent: AppShell & Dashboard Polish Agent
+Task: Polish AppShell, Dashboard, and navigation UX to production grade
+
+Work Log:
+- Read worklog.md and target files (AppShell.tsx, DashboardPage.tsx) + globals.css to understand current state
+- Added Plus icon import from lucide-react for new "New Chat" sidebar button
+- Renamed "Dashboard" → "Home" in sidebar navItems for consistency with mobile bottom nav
+- Removed "New Chat" from navItems (now a dedicated button at top of sidebar)
+- Added MOBILE_NAV_HEIGHT constant (56px) for consistent mobile bottom nav height
+- Refined AppShell sidebar:
+  - Added prominent "New Chat" button at top of sidebar (white bg, black text, btn-primary style, Plus icon)
+  - Active nav items now show a 2px blue left border accent (borderLeft: 2px solid var(--accent-blue))
+  - Inactive items show 2px transparent left border for consistent alignment
+  - NEW badge on Deep Research changed from subtle badge-pill to bright green pill (var(--accent-green) bg, #000000 text, 9px bold, 4px border-radius)
+  - Nav item font-size reduced from 14px to 13px, padding 7px 12px for cleaner density
+  - Active items show fontWeight 500, inactive show 400
+  - Separator margins adjusted from '8px 0' to '8px 12px' for cleaner indentation
+  - Upgrade card border-radius 12px→10px, padding 16px→14px for tighter feel
+- Refined AppShell top navbar:
+  - Logo icon: changed from translucent bg (rgba(255,255,255,0.06)) to solid accent-blue bg (var(--accent-blue)) with black search icon — more brand-forward
+  - Logo icon size reduced: 28px→24px, border-radius 6px→5px for tighter proportions
+  - Logo text: font-weight 500→600, letter-spacing -0.01em→-0.02em, font-size 14→13
+  - ⌘K search shortcut: much more discoverable — shows "Search…" placeholder text, larger min-width 160px, ⌘K in styled kbd element, border-color transition on hover to var(--ink), bg transition to var(--surface-elevated)
+  - User dropdown plan badge: now color-coded per plan — Pro=var(--accent-green) with rgba(17,255,153,0.1) bg, Enterprise=var(--accent-orange) with rgba(255,128,31,0.1) bg, Free=var(--ash) with default bg
+- Refined mobile bottom nav:
+  - Active tab now shows var(--accent-blue) color + subtle blue highlight bg (rgba(59,158,255,0.08))
+  - Touch targets: minHeight 44px for iOS accessibility compliance
+  - Active label uses fontWeight 600, inactive uses 500
+  - Added borderRadius 8px to each button for the highlight effect
+  - Added padding '4px 0' and gap 3 for better spacing
+  - Added letterSpacing 0.01em on labels
+  - iOS safe area: paddingBottom 'env(safe-area-inset-bottom, 0px)' on nav element
+- Fixed main content bottom padding:
+  - Replaced Tailwind class pb-16 lg:pb-0 with inline paddingBottom: MOBILE_NAV_HEIGHT + 16 (72px)
+  - Ensures content is never obscured by fixed bottom nav on mobile
+  - Provides comfortable bottom spacing on all viewports
+- Refined DashboardPage welcome header:
+  - Changed to text-center layout for hero-style presentation
+  - Font changed to serif (var(--font-serif)) with larger clamp(26px, 4vw, 38px) for visual impact
+  - font-weight 400 for editorial feel, letter-spacing -0.01em
+  - Subtitle: increased to 16px, var(--ash) color for softer hierarchy
+- Refined DashboardPage search bar (hero element):
+  - Height increased from 48px to 56px for prominence
+  - Border-radius increased from 12px to 14px
+  - Border changed from 1px to 1.5px, focus color changed from var(--ink) to var(--accent-blue)
+  - Added focus ring: box-shadow 0 0 0 3px rgba(59,158,255,0.12) — blue glow effect
+  - Search icon: increased from h-4 w-4 to 18px, color changes to var(--accent-blue) on focus
+  - Input font-size increased from text-base to 15px
+  - Deep research toggle: Telescope icon color changes to var(--accent-blue) when active
+  - "Deep" label color changes to var(--accent-blue) when active, font-weight 500
+  - Placeholder changed from "Ask anything... get answers with sources" to "Ask anything — get answers with sources" (em dash)
+  - Submit button increased from 32px to 36px
+  - Keyboard hint: font-size 11→12, kbd padding 1px 4px→2px 5px, border-radius 3px→4px
+- Refined DashboardPage quick actions:
+  - Added per-button hover effects with accent-colored border + tinted bg
+  - Start New Research: hover border var(--accent-blue) + rgba(59,158,255,0.06) bg
+  - Browse History: hover border var(--accent-yellow) + rgba(255,197,61,0.06) bg
+  - View Collections: hover border var(--accent-green) + rgba(17,255,153,0.06) bg
+  - Deep Research: shows active state with accent-blue border + bg when enabled
+  - Padding increased to '8px 18px', gap 2.5→3, section margin mb-10→mb-12
+- Refined DashboardPage recent conversations:
+  - Section label changed from heading-sm to uppercase small-caps style (14px, fontWeight 600, letterSpacing 0.04em, textTransform uppercase, var(--ash))
+  - "View All" button: added fontWeight 500
+  - Conversation cards: padding '16px'→'14px 16px', mb-1.5→mb-1
+  - Preview text: font-size text-xs→13px, lineHeight 1.45, mb-2.5→mb-3
+  - Metadata: color var(--ash)→var(--stone), font-size text-xs→12px
+  - Added Clock icon before date for visual clarity
+  - Empty state: padding 32px→40px 32px, icon color var(--ash)→var(--stone), title font-weight 500
+- Refined DashboardPage trending topics:
+  - Section label same uppercase small-caps style as Recent
+  - Badge font-size 12→13, padding 4px 10px→6px 12px
+- Refined DashboardPage usage stats:
+  - Added plan icon in a 32px rounded square with tinted bg (green for Pro, orange for Enterprise, blue for Free)
+  - Two-line layout: plan name + "ACTIVE" badge on first line, search count on second line
+  - Pro/Enterprise: shows "ACTIVE" badge in plan color with tinted bg
+  - Card padding: 12px 16px→14px 18px
+  - Upgrade button: changed "Upgrade" to "Upgrade →"
+- ESLint check passes cleanly with zero errors
+- No new TypeScript errors introduced (pre-existing framer-motion Variants type issues unchanged)
+
+Stage Summary:
+- AppShell sidebar: prominent "New Chat" button, active items with 2px blue left border accent, bright green NEW badge, cleaner 13px font with consistent spacing
+- AppShell navbar: branded accent-blue logo icon, discoverable ⌘K with "Search…" text and styled kbd, color-coded plan badges (Pro=green, Enterprise=orange, Free=ash)
+- Mobile bottom nav: 44px touch targets, blue active highlight, iOS safe-area padding, fontWeight 600 on active labels
+- Main content: proper paddingBottom (72px) preventing bottom nav overlap
+- DashboardPage: centered serif greeting hero, 56px search bar with blue focus ring, accent-colored hover effects on quick actions, uppercase section labels, richer conversation cards with Clock icons, prominent usage stats with plan icon and ACTIVE badge
+- All changes use Resend design system variables consistently
+- Zero lint errors, zero new TypeScript errors
+
+---
+Task ID: 3
+Agent: ChatPage UX Polish Agent
+Task: Polish ChatPage component to production-grade UX quality
+
+Work Log:
+- Read worklog.md, ChatPage.tsx, SourceCard.tsx, FollowUpQuestions.tsx, globals.css, app-store.ts, search-handler.ts to understand current state
+- Identified 8 key improvement areas from task specification
+
+1. Streaming source cards — sources now appear ABOVE the answer text during streaming:
+  - Added `currentSources` from useAppStore subscription
+  - Created `getSourcesForMessage()` helper: returns `currentSources` during streaming, `msg.sources` after completion
+  - Source cards rendered before answer text, matching Perplexity's layout where sources appear first
+  - Sources become visible as soon as SSE delivers them (before text tokens start)
+
+2. Better empty state:
+  - Added "Powered by AI" badge with Zap icon below subtitle (surface-elevated bg, hairline border, rounded-full)
+  - Changed title from "Ask anything..." to "Ask anything" (removed trailing ellipsis for cleaner look)
+  - Made deep research toggle label say "Deep Research" instead of just "Deep" in empty state
+  - Added description text "Thorough multi-source analysis" below toggle when deep research is active
+  - Suggestion cards now have hover effects: border → hairline-strong, bg → surface-elevated
+
+3. Answer presentation — Perplexity-style layout:
+  - Sources shown above answer text (horizontally scrollable SourceCard component)
+  - Answer text below with inline citation chips
+  - Follow-up questions in clean card below answer (using shared FollowUpQuestions component)
+  - Removed `feature-card-bordered` wrapper from answer content — no more double-bordering
+  - Answer text flows naturally without a card container, just prose styling
+
+4. Removed code redundancy:
+  - Removed inline ChatSourceCard component (~80 lines) — now imports shared SourceCard from @/components/SourceCard
+  - Removed inline ChatFollowUps component (~60 lines) — now imports shared FollowUpQuestions from @/components/FollowUpQuestions
+  - Removed unused imports: Plus (was only used in ChatFollowUps)
+  - Added imports: SourceCard, FollowUpQuestions, Zap (for "Powered by AI" badge)
+
+5. User message styling — Perplexity-like:
+  - User messages now render as simple text headings (text-lg sm:text-xl font-medium, var(--ink) color)
+  - No card background, no border, no bubble — just clean text like Perplexity
+  - Uses motion.h2 with subtle fade-in animation
+  - Top padding (pt-4) and bottom padding (pb-1) for spacing between user query and AI response
+
+6. Bottom input bar polish:
+  - Redesigned as a rounded-2xl container inside the sticky bottom bar (matches empty state search bar aesthetic)
+  - Added focus glow effect: border → var(--ink) + boxShadow with accent-blue-glow when textarea focused
+  - Bottom bar border changes: hairline when unfocused → hairline-strong when focused
+  - Deep research toggle: changes bg/border/icon/text color to accent-blue when active (rgba(59,158,255,0.08) bg, rgba(59,158,255,0.2) border)
+  - Submit button: rounded-[10px], 36x36px with Send icon (instead of ArrowRight)
+  - All transitions use duration-200 for smooth feel
+  - Responsive: hidden "Deep" label on mobile, gap-1.5 on mobile vs gap-2 on desktop
+
+7. Loading state — Progressive animation:
+  - Replaced simple "Searching and analyzing sources..." bouncing dots with ProgressiveLoader component
+  - 4 stages with icons: Searching (Search), Reading sources (Globe), Analyzing (Brain), Generating answer (Sparkles)
+  - Stage dots progress with color (accent-blue for completed/current, stone for upcoming)
+  - Current stage dot scales up (1.3x) for visual emphasis
+  - Stage icon + label text transition smoothly between stages
+  - Timers: 1.8s → Searching, 3s → Reading sources, 5s → Analyzing, 7s+ → Generating answer
+  - Deep research mode skips ProgressiveLoader (uses its own progress bar instead)
+  - Fixed ESLint error: removed direct setStage(0) call inside useEffect, used mountedRef pattern for safe state updates
+
+8. Responsive design:
+  - Bottom input bar: responsive padding (px-3 sm:px-4), gap (gap-1.5 sm:gap-2)
+  - User messages: responsive font size (text-lg sm:text-xl)
+  - Message area: responsive horizontal padding (px-4 sm:px-6)
+  - Empty state search bar: responsive padding (px-4 sm:px-5)
+  - Deep research label: hidden on mobile (hidden sm:inline)
+  - Deep research description: hidden on mobile (hidden sm:block)
+
+- Preserved all original functionality: SSE streaming, message handling, search flow, follow-ups, citations, deep research, auto-scroll, keyboard shortcuts, textarea auto-resize
+- ESLint check passes with zero errors
+- Next.js build compiles successfully
+
+Stage Summary:
+- ChatPage polished to production-grade Perplexity-style UX
+- Sources appear above answer text during streaming (key Perplexity pattern)
+- User messages are simple text headings (no card/bubble)
+- Answer content no longer wrapped in feature-card-bordered (no double-border)
+- Progressive loading animation with 4 stages (Searching → Reading sources → Analyzing → Generating answer)
+- Focus glow on empty state and bottom input bars (accent-blue-glow boxShadow)
+- Deep research toggle changes appearance when active (blue accent colors)
+- "Powered by AI" badge in empty state
+- Deep research description text when active
+- Eliminated ~140 lines of duplicate code (ChatSourceCard + ChatFollowUps) by importing shared components
+- All design system variables used consistently
+- Zero lint errors, zero compilation errors
+
+---
+Task ID: 9
+Agent: Main Orchestrator
+Task: Fix Indian context (1k = ₹1,000 INR), refine UI/UX to production grade
+
+Work Log:
+- Fixed Indian currency context in /api/chat/route.ts:
+  - Added query preprocessing: detects "1k", "2k", "5k" etc. and expands to "1000", "2000", "5000"
+  - Appends "in India" to search queries when currency/price/product patterns are detected
+  - Updated system prompt with CRITICAL CONTEXT section for Indian users:
+    - "k" = thousand (1k = ₹1,000), "L" or "lakh" = lakh (1L = ₹1,00,000)
+    - Default currency is INR unless user explicitly mentions USD/dollars
+    - Prioritize Indian market products (Amazon.in, Flipkart, Croma, Reliance Digital)
+    - Show prices in ₹ format, convert international prices at ~$1 ≈ ₹83
+    - Use Indian English conventions (lakh, crore)
+- Updated all UI components with India-relevant content:
+  - HeroSection: trending searches → "Best headphones under 1k", "Top mutual funds India 2026", etc.
+  - HeroSection: subtitle → "tailored for Indian users"
+  - EmptyChatState (page.tsx): suggested queries → "Best smartphones under 15k", "Top mutual funds for SIP 2026", etc.
+  - ChatPage: suggestions → "Best headphones under ₹1,000 in India", "Top mutual funds for SIP in 2026", etc.
+  - DashboardPage: trending topics → "Best phones under 20k", "SIP mutual funds 2026", "UPSC preparation tips", etc.
+- Launched 3 parallel UI/UX refinement agents:
+  1. ChatPage polish: streaming sources shown above answer, Perplexity-style user messages (no card), progressive loading stages, focus glow on search bars, removed code duplication
+  2. Landing page India localization: pricing in ₹, Indian testimonials, India-relevant FAQ (UPI, DPDP Act), Indian numbering (2L+), "Made in India" footer
+  3. AppShell & Dashboard polish: "New Chat" button in sidebar, active nav left border accent, ⌘K search shortcut more discoverable, plan badge color-coded, mobile bottom nav with safe area padding, blue focus ring on dashboard search
+- ESLint: zero errors
+- Browser verification:
+  - Landing page: all sections render, India-relevant trending searches ✓
+  - Search "best headphones under 1k" → "Best Headphones Under ₹1,000 in India" with Indian sources (Flipkart, Myntra, r/headphonesindia) ✓
+  - Follow-up "best laptops under 50k for coding" → Indian market results with ₹50,000 ✓
+  - Login → Dashboard: India-relevant trending topics ✓
+  - Authenticated chat: working with citations, follow-ups, deep research ✓
+  - Mobile responsive: 390x844 viewport ✓
+
+Stage Summary:
+- AI now correctly interprets "1k" as ₹1,000 INR (not $1,000 USD)
+- Search queries automatically get "in India" appended when relevant
+- System prompt instructs AI to use INR, Indian market sources, and Indian English
+- All UI components updated with India-relevant content (trending, suggestions, pricing)
+- Landing page localized: ₹ pricing, Indian testimonials, India FAQ, "Made in India" footer
+- ChatPage polished: Perplexity-style layout, progressive loading, focus glow
+- AppShell polished: sidebar accent borders, new chat button, mobile safe area
+- Full browser verification passed for both unauthenticated and authenticated flows

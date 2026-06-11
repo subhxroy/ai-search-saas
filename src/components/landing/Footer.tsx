@@ -205,28 +205,36 @@ export default function Footer() {
 
             {/* Description */}
             <p className="body-sm" style={{ marginBottom: '20px', maxWidth: '260px' }}>
-              AI-powered search that understands context, delivers clarity, and accelerates discovery.
+              AI-powered search that understands Indian context, delivers clarity, and accelerates discovery.
             </p>
 
             {/* Status indicator */}
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
+                flexDirection: 'column',
+                gap: '4px',
               }}
             >
-              <span className="status-dot" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="status-dot" />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                    fontSize: '13px',
+                    fontWeight: 400,
+                    lineHeight: 1.5,
+                    color: 'var(--ash)',
+                  }}
+                >
+                  Status: Operational
+                </span>
+              </div>
               <span
-                style={{
-                  fontFamily: 'var(--font-inter), system-ui, sans-serif',
-                  fontSize: '13px',
-                  fontWeight: 400,
-                  lineHeight: 1.5,
-                  color: 'var(--ash)',
-                }}
+                className="body-sm"
+                style={{ color: 'var(--stone)', paddingLeft: '16px' }}
               >
-                Status: Operational
+                Bengaluru, India
               </span>
             </div>
           </motion.div>
@@ -267,7 +275,7 @@ export default function Footer() {
               color: 'var(--stone)',
             }}
           >
-            © 2026 Nexus AI. All rights reserved.
+            © 2026 Nexus AI. Made in India. All rights reserved.
           </span>
 
           {/* Social icons */}

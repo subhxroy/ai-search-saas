@@ -24,31 +24,31 @@ const FEATURES: Feature[] = [
   {
     icon: Globe,
     title: 'Real-time Web Search',
-    description: 'Search the entire web in real-time. No stale data, no outdated answers — always current.',
+    description: 'Search the entire web in real-time — from Indian government portals to global journals. Always current, never stale.',
     accent: 'var(--accent-blue)',
   },
   {
     icon: Quote,
     title: 'Accurate Citations',
-    description: 'Every claim backed by sources. Click any citation to verify the original material.',
+    description: 'Every claim backed by sources. Click any citation to verify the original material — from RBI reports to research papers.',
     accent: 'var(--accent-green)',
   },
   {
     icon: Brain,
     title: 'Multi-Model AI',
-    description: 'Powered by multiple AI models, orchestrated for the best possible answer to your query.',
+    description: 'Powered by multiple AI models, orchestrated for the best possible answer — in English, Hindi, and more.',
     accent: 'var(--accent-orange)',
   },
   {
     icon: Telescope,
     title: 'Deep Research Mode',
-    description: 'Go deeper with research mode for comprehensive, multi-source analysis on complex topics.',
+    description: 'Go deeper with research mode for comprehensive, multi-source analysis on complex topics like GST implications or SEBI regulations.',
     accent: 'var(--accent-blue)',
   },
   {
     icon: MessageSquare,
     title: 'Conversation Memory',
-    description: 'Your context persists across turns. Ask follow-ups naturally without repeating yourself.',
+    description: 'Your context persists across turns. Ask follow-ups naturally without repeating yourself — just like chatting with an expert.',
     accent: 'var(--accent-yellow)',
   },
   {
@@ -60,13 +60,13 @@ const FEATURES: Feature[] = [
   {
     icon: FileUp,
     title: 'File Uploads',
-    description: 'Upload documents, images, and files for AI analysis. PDFs, spreadsheets, and more.',
+    description: 'Upload documents, images, and files for AI analysis. PDFs, Aadhaar scans, spreadsheets, and more.',
     accent: 'var(--accent-green)',
   },
   {
     icon: Zap,
     title: 'Lightning Fast',
-    description: 'Responses stream in real-time. No waiting for full generation — answers as they arrive.',
+    description: 'Responses stream in real-time. No waiting for full generation — answers as they arrive, even on slower connections.',
     accent: 'var(--accent-yellow)',
   },
 ]
@@ -115,7 +115,7 @@ export default function WhyThisProductSection() {
           </h2>
           <p className="body-md max-w-[520px]" style={{ color: 'var(--charcoal)' }}>
             Every feature designed for depth, speed, and trust.
-            No shortcuts, no compromises.
+            From IIT research to UPSC prep — no shortcuts, no compromises.
           </p>
         </motion.div>
 

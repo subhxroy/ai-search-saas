@@ -13,27 +13,37 @@ const FAQ_DATA: FAQItem[] = [
   {
     question: 'How is Nexus AI different from ChatGPT?',
     answer:
-      'Nexus AI searches the web in real-time and provides cited, verifiable answers. Unlike ChatGPT, every response includes source citations you can click to verify. Our multi-model approach cross-references information for accuracy.',
+      'Nexus AI searches the web in real-time and provides cited, verifiable answers. Unlike ChatGPT, every response includes source citations you can click to verify — from RBI reports to Supreme Court judgments. Our multi-model approach cross-references information for accuracy.',
   },
   {
     question: 'Where do the citations come from?',
     answer:
-      'Citations come from real web sources found through our search engine. Each claim in our answers is linked to its original source—academic papers, news articles, documentation, and trusted websites.',
+      'Citations come from real web sources found through our search engine. Each claim is linked to its original source — academic papers, government portals like India Code and PRS India, news articles, documentation, and trusted websites.',
   },
   {
     question: 'Which AI models power Nexus?',
     answer:
-      "Nexus uses multiple state-of-the-art AI models, dynamically selecting the best model for each query type. This ensures optimal accuracy whether you're researching science, business, or creative topics.",
+      "Nexus uses multiple state-of-the-art AI models, dynamically selecting the best model for each query type. This ensures optimal accuracy whether you're researching GST compliance, UPSC topics, or technical documentation.",
   },
   {
     question: 'Is there a free plan?',
     answer:
-      'Yes! Our free plan includes 10 searches per day with standard AI models and basic citations. No credit card required. Upgrade to Pro anytime for unlimited searches and premium features.',
+      'Yes! Our free plan includes 10 searches per day with standard AI models and basic citations. No credit card or UPI required. Upgrade to Pro anytime for just ₹499/month with unlimited searches and premium features.',
   },
   {
     question: 'Can I upload files for analysis?',
     answer:
-      'Pro and Enterprise users can upload documents, PDFs, images, and data files. Our AI will analyze the content and incorporate it into your research alongside web sources.',
+      'Pro and Enterprise users can upload documents, PDFs, images, and data files. Our AI will analyze the content and incorporate it into your research alongside web sources — great for CA audit reports, legal case files, or research papers.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer:
+      'We accept UPI (GPay, PhonePe, Paytm), credit/debit cards, net banking, and international cards. All Pro and Enterprise plans are billed in INR with no hidden conversion fees.',
+  },
+  {
+    question: 'Is my data stored in India?',
+    answer:
+      'Yes. We comply with India\'s Digital Personal Data Protection Act (DPDP) 2023. Your data is processed and stored with enterprise-grade encryption. We never use your conversations to train AI models.',
   },
 ]
 

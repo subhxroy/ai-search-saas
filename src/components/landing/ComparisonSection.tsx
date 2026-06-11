@@ -22,18 +22,23 @@ const COMPARISONS: ComparisonRow[] = [
   },
   {
     label: 'Research Speed',
-    traditional: 'Open 20+ tabs',
+    traditional: 'Open 10+ tabs',
     nexus: 'One conversation',
   },
   {
     label: 'Source Credibility',
     traditional: 'Sponsored results first',
-    nexus: 'Academic + trusted sources',
+    nexus: 'RBI, SEBI, academic + trusted sources',
   },
   {
     label: 'Conversational',
     traditional: 'No follow-up possible',
     nexus: 'Natural dialogue with memory',
+  },
+  {
+    label: 'Language Support',
+    traditional: 'English-only results',
+    nexus: 'English, Hindi & multilingual',
   },
 ]
 
@@ -69,7 +74,7 @@ export default function ComparisonSection() {
         >
           <h2 className="display-xl mb-4">A new standard</h2>
           <p className="body-md" style={{ color: 'var(--charcoal)' }}>
-            See how Nexus AI compares to traditional search engines.
+            See how Nexus AI compares to traditional search — built for India's researchers and professionals.
           </p>
         </motion.div>
 

@@ -5,10 +5,10 @@ import { motion } from 'framer-motion'
 import { Search, ArrowRight, Zap, BookOpen, Shield, Brain } from 'lucide-react'
 
 const TRENDING_SEARCHES = [
-  'Best startup ideas 2026',
-  'How to build a SaaS',
-  'AI business opportunities',
-  'Climate tech solutions',
+  'Best headphones under 1k',
+  'Top mutual funds India 2026',
+  'Budget travel destinations',
+  'AI startups in Bangalore',
 ]
 
 const TRUST_INDICATORS = [
@@ -85,7 +85,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           custom={1}
         >
           AI-powered search with real-time citations. Ask anything and get
-          verified answers from across the web — no guesswork, no dead links.
+          verified answers from across the web — tailored for Indian users.
         </motion.p>
 
         {/* ── Search Bar ── */}

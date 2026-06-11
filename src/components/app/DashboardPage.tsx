@@ -65,12 +65,12 @@ function formatDate(dateStr: string): string {
 /* ------------------------------------------------------------------ */
 
 const trendingTopics = [
-  { label: 'AI trends 2026', icon: TrendingUp },
-  { label: 'Quantum computing', icon: Sparkles },
-  { label: 'Climate tech', icon: Zap },
-  { label: 'SaaS growth', icon: ArrowRight },
-  { label: 'Space exploration', icon: Telescope },
-  { label: 'Biotech breakthroughs', icon: Sparkles },
+  { label: 'Best phones under 20k', icon: TrendingUp },
+  { label: 'SIP mutual funds 2026', icon: Sparkles },
+  { label: 'UPSC preparation tips', icon: Zap },
+  { label: 'IPL 2026 updates', icon: ArrowRight },
+  { label: 'Startup ideas India', icon: Telescope },
+  { label: 'Best laptops under 50k', icon: Sparkles },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -171,37 +171,52 @@ export default function DashboardPage() {
       animate="visible"
     >
       {/* ======== WELCOME HEADER ======== */}
-      <motion.div variants={itemVariants} className="mb-8">
-        <h1 className="heading-md" style={{ fontSize: 'clamp(22px, 3vw, 30px)', lineHeight: 1.3 }}>
-          {getGreeting()},{' '}
-          <span style={{ fontFamily: 'var(--font-serif), Georgia, Times New Roman, serif', color: 'var(--ink)' }}>
-            {userName}
-          </span>
+      <motion.div variants={itemVariants} className="mb-10 text-center">
+        <h1
+          style={{
+            fontFamily: 'var(--font-serif), Georgia, Times New Roman, serif',
+            fontSize: 'clamp(26px, 4vw, 38px)',
+            fontWeight: 400,
+            lineHeight: 1.2,
+            letterSpacing: '-0.01em',
+            color: 'var(--ink)',
+          }}
+        >
+          {getGreeting()}, {userName}
         </h1>
-        <p className="body-sm mt-1.5" style={{ color: 'var(--charcoal)' }}>
+        <p
+          className="mt-2"
+          style={{
+            fontSize: 16,
+            color: 'var(--ash)',
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            lineHeight: 1.5,
+          }}
+        >
           What would you like to research today?
         </p>
       </motion.div>
 
-      {/* ======== SEARCH BAR ======== */}
-      <motion.div variants={itemVariants} className="mb-8">
+      {/* ======== SEARCH BAR — HERO ======== */}
+      <motion.div variants={itemVariants} className="mb-10">
         <form onSubmit={onSearch} className="max-w-2xl mx-auto">
           <div
             style={{
               background: 'var(--surface-card)',
-              border: `1px solid ${searchFocused ? 'var(--ink)' : 'var(--hairline-strong)'}`,
-              borderRadius: '12px',
-              height: '48px',
+              border: `1.5px solid ${searchFocused ? 'var(--accent-blue)' : 'var(--hairline-strong)'}`,
+              borderRadius: '14px',
+              height: '56px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              padding: '0 16px',
-              transition: 'border-color 0.15s ease',
+              padding: '0 18px',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+              boxShadow: searchFocused ? '0 0 0 3px rgba(59,158,255,0.12)' : 'none',
             }}
           >
             <Search
-              className="h-4 w-4 shrink-0"
-              style={{ color: 'var(--ash)' }}
+              className="shrink-0"
+              style={{ width: 18, height: 18, color: searchFocused ? 'var(--accent-blue)' : 'var(--ash)', transition: 'color 0.15s ease' }}
             />
             <input
               type="text"
@@ -209,10 +224,11 @@ export default function DashboardPage() {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
-              placeholder="Ask anything... get answers with sources"
-              className="flex-1 bg-transparent outline-none text-base"
+              placeholder="Ask anything — get answers with sources"
+              className="flex-1 bg-transparent outline-none"
               style={{
                 color: 'var(--ink)',
+                fontSize: 15,
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
               }}
               disabled={isLoading}
@@ -220,15 +236,15 @@ export default function DashboardPage() {
             {/* Deep research toggle */}
             <div
               className="flex items-center gap-2 shrink-0"
-              style={{ borderLeft: '1px solid var(--hairline)', paddingLeft: '12px' }}
+              style={{ borderLeft: '1px solid var(--hairline)', paddingLeft: '14px' }}
             >
               <Telescope
-                className="h-3.5 w-3.5"
-                style={{ color: 'var(--ash)' }}
+                className="shrink-0"
+                style={{ width: 15, height: 15, color: isDeepResearch ? 'var(--accent-blue)' : 'var(--ash)', transition: 'color 0.15s ease' }}
               />
               <span
-                className="text-xs hidden sm:inline"
-                style={{ color: 'var(--ash)' }}
+                className="hidden sm:inline"
+                style={{ color: isDeepResearch ? 'var(--accent-blue)' : 'var(--ash)', fontSize: 12, fontWeight: 500, fontFamily: 'var(--font-inter), system-ui, sans-serif', transition: 'color 0.15s ease' }}
               >
                 Deep
               </span>
@@ -244,11 +260,11 @@ export default function DashboardPage() {
               disabled={!query.trim() || isLoading}
               className="btn-primary shrink-0"
               style={{
-                height: '32px',
-                width: '32px',
+                height: '36px',
+                width: '36px',
                 padding: 0,
                 borderRadius: '8px',
-                minWidth: '32px',
+                minWidth: '36px',
               }}
             >
               {isLoading ? (
@@ -259,24 +275,39 @@ export default function DashboardPage() {
             </button>
           </div>
           {/* Keyboard shortcut hint */}
-          <div className="flex justify-center mt-2">
-            <span style={{ fontSize: 11, color: 'var(--stone)' }}>
-              Press <kbd style={{ padding: '1px 4px', borderRadius: '3px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 10 }}>Enter</kbd> to search · <kbd style={{ padding: '1px 4px', borderRadius: '3px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 10 }}>⌘K</kbd> from anywhere
+          <div className="flex justify-center mt-3">
+            <span style={{ fontSize: 12, color: 'var(--stone)', fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+              Press <kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 11, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>Enter</kbd> to search · <kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 11, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>⌘K</kbd> from anywhere
             </span>
           </div>
         </form>
       </motion.div>
 
       {/* ======== QUICK ACTIONS ======== */}
-      <motion.div variants={itemVariants} className="mb-10">
-        <div className="flex flex-wrap gap-2.5 justify-center max-w-2xl mx-auto">
+      <motion.div variants={itemVariants} className="mb-12">
+        <div className="flex flex-wrap gap-3 justify-center max-w-2xl mx-auto">
           <button
             onClick={() => {
               setQuery('')
               navigate('chat')
             }}
             className="btn-ghost"
-            style={{ borderRadius: '9999px', gap: '8px' }}
+            style={{
+              borderRadius: '9999px',
+              gap: '8px',
+              padding: '8px 18px',
+              fontSize: 13,
+              border: '1px solid var(--hairline-strong)',
+              background: 'var(--surface-card)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-blue)'
+              e.currentTarget.style.background = 'rgba(59,158,255,0.06)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+              e.currentTarget.style.background = 'var(--surface-card)'
+            }}
           >
             <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--accent-blue)' }} />
             Start New Research
@@ -284,7 +315,14 @@ export default function DashboardPage() {
           <button
             onClick={() => setIsDeepResearch(!isDeepResearch)}
             className="btn-ghost"
-            style={{ borderRadius: '9999px', gap: '8px' }}
+            style={{
+              borderRadius: '9999px',
+              gap: '8px',
+              padding: '8px 18px',
+              fontSize: 13,
+              border: isDeepResearch ? '1px solid var(--accent-blue)' : '1px solid var(--hairline-strong)',
+              background: isDeepResearch ? 'rgba(59,158,255,0.06)' : 'var(--surface-card)',
+            }}
           >
             <Telescope className="h-3.5 w-3.5" style={{ color: 'var(--accent-orange)' }} />
             Deep Research
@@ -292,7 +330,22 @@ export default function DashboardPage() {
           <button
             onClick={() => navigate('history')}
             className="btn-ghost"
-            style={{ borderRadius: '9999px', gap: '8px' }}
+            style={{
+              borderRadius: '9999px',
+              gap: '8px',
+              padding: '8px 18px',
+              fontSize: 13,
+              border: '1px solid var(--hairline-strong)',
+              background: 'var(--surface-card)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-yellow)'
+              e.currentTarget.style.background = 'rgba(255,197,61,0.06)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+              e.currentTarget.style.background = 'var(--surface-card)'
+            }}
           >
             <Clock className="h-3.5 w-3.5" style={{ color: 'var(--accent-yellow)' }} />
             Browse History
@@ -300,7 +353,22 @@ export default function DashboardPage() {
           <button
             onClick={() => navigate('collections')}
             className="btn-ghost"
-            style={{ borderRadius: '9999px', gap: '8px' }}
+            style={{
+              borderRadius: '9999px',
+              gap: '8px',
+              padding: '8px 18px',
+              fontSize: 13,
+              border: '1px solid var(--hairline-strong)',
+              background: 'var(--surface-card)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-green)'
+              e.currentTarget.style.background = 'rgba(17,255,153,0.06)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+              e.currentTarget.style.background = 'var(--surface-card)'
+            }}
           >
             <FolderOpen className="h-3.5 w-3.5" style={{ color: 'var(--accent-green)' }} />
             View Collections
@@ -309,9 +377,20 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ======== RECENT CONVERSATIONS ======== */}
-      <motion.div variants={itemVariants} className="mb-10">
+      <motion.div variants={itemVariants} className="mb-12">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="heading-sm" style={{ fontSize: '18px' }}>Recent</h2>
+          <h2
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--ash)',
+              fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Recent
+          </h2>
           <button
             onClick={() => navigate('history')}
             className="flex items-center gap-1"
@@ -323,6 +402,7 @@ export default function DashboardPage() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
+              fontWeight: 500,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ash)')}
@@ -378,7 +458,7 @@ export default function DashboardPage() {
                   navigate('chat', { id: conv.id })
                 }}
                 className="feature-card-bordered text-left group transition-all duration-200"
-                style={{ padding: '16px', cursor: 'pointer' }}
+                style={{ padding: '14px 16px', cursor: 'pointer' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = 'var(--hairline-strong)'
                 }}
@@ -386,12 +466,13 @@ export default function DashboardPage() {
                   e.currentTarget.style.borderColor = ''
                 }}
               >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="flex items-start justify-between gap-2 mb-1">
                   <h3
                     className="text-sm font-medium line-clamp-1"
                     style={{
                       color: 'var(--ink)',
                       fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                      fontSize: 14,
                     }}
                   >
                     {conv.title}
@@ -403,17 +484,29 @@ export default function DashboardPage() {
                 </div>
                 {conv.preview && (
                   <p
-                    className="text-xs line-clamp-2 mb-2.5"
-                    style={{ color: 'var(--charcoal)' }}
+                    className="line-clamp-2 mb-3"
+                    style={{
+                      color: 'var(--charcoal)',
+                      fontSize: 13,
+                      lineHeight: 1.45,
+                      fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                    }}
                   >
                     {conv.preview}
                   </p>
                 )}
                 <div
-                  className="flex items-center gap-3 text-xs"
-                  style={{ color: 'var(--ash)' }}
+                  className="flex items-center gap-3"
+                  style={{
+                    color: 'var(--stone)',
+                    fontSize: 12,
+                    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                  }}
                 >
-                  <span>{formatDate(conv.date)}</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDate(conv.date)}
+                  </span>
                   <span className="flex items-center gap-1">
                     <MessageSquare className="h-3 w-3" />
                     {conv.messageCount}
@@ -425,18 +518,27 @@ export default function DashboardPage() {
         ) : (
           <div
             className="feature-card-bordered text-center"
-            style={{ padding: '32px' }}
+            style={{ padding: '40px 32px' }}
           >
             <MessageSquare
               className="h-8 w-8 mx-auto mb-3"
-              style={{ color: 'var(--ash)' }}
+              style={{ color: 'var(--stone)' }}
             />
-            <p className="body-sm" style={{ color: 'var(--charcoal)' }}>No conversations yet</p>
             <p
-              className="mt-1"
+              style={{
+                color: 'var(--charcoal)',
+                fontSize: 14,
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                fontWeight: 500,
+              }}
+            >
+              No conversations yet
+            </p>
+            <p
+              className="mt-1.5"
               style={{
                 color: 'var(--stone)',
-                fontSize: '13px',
+                fontSize: 13,
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
               }}
             >
@@ -447,8 +549,20 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ======== TRENDING TOPICS ======== */}
-      <motion.div variants={itemVariants} className="mb-10">
-        <h2 className="heading-sm mb-4" style={{ fontSize: '18px' }}>Trending Topics</h2>
+      <motion.div variants={itemVariants} className="mb-12">
+        <h2
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: 'var(--ash)',
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            marginBottom: 12,
+          }}
+        >
+          Trending Topics
+        </h2>
         <div className="flex flex-wrap gap-2">
           {trendingTopics.map((topic) => (
             <button
@@ -461,6 +575,8 @@ export default function DashboardPage() {
                 opacity: isLoading ? 0.5 : 1,
                 transition: 'color 0.15s ease, border-color 0.15s ease, background 0.15s ease',
                 border: '1px solid var(--hairline)',
+                fontSize: 13,
+                padding: '6px 12px',
               }}
               onMouseEnter={(e) => {
                 if (!isLoading) {
@@ -486,30 +602,79 @@ export default function DashboardPage() {
       <motion.div variants={itemVariants}>
         <div
           className="feature-card-bordered flex items-center justify-between flex-wrap gap-3"
-          style={{ padding: '12px 16px' }}
+          style={{ padding: '14px 18px' }}
         >
-          <div className="flex items-center gap-2">
-            <Zap
-              className="h-3.5 w-3.5"
-              style={{ color: 'var(--accent-blue)' }}
-            />
-            <span
+          <div className="flex items-center gap-3">
+            <div
               style={{
-                color: 'var(--ash)',
-                fontSize: '13px',
-                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 32,
+                height: 32,
+                borderRadius: '8px',
+                background: currentUser?.plan === 'pro'
+                  ? 'rgba(17,255,153,0.1)'
+                  : currentUser?.plan === 'enterprise'
+                    ? 'rgba(255,128,31,0.1)'
+                    : 'rgba(59,158,255,0.1)',
+                flexShrink: 0,
               }}
             >
-              <span style={{ color: 'var(--ink)', fontWeight: 500 }}>
-                {currentUser?.plan === 'pro'
-                  ? 'Pro Plan'
-                  : currentUser?.plan === 'enterprise'
-                    ? 'Enterprise Plan'
-                    : 'Free Plan'}
+              <Zap
+                style={{
+                  width: 16,
+                  height: 16,
+                  color: currentUser?.plan === 'pro'
+                    ? 'var(--accent-green)'
+                    : currentUser?.plan === 'enterprise'
+                      ? 'var(--accent-orange)'
+                      : 'var(--accent-blue)',
+                }}
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span
+                  style={{
+                    color: 'var(--ink)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                  }}
+                >
+                  {currentUser?.plan === 'pro'
+                    ? 'Pro Plan'
+                    : currentUser?.plan === 'enterprise'
+                      ? 'Enterprise Plan'
+                      : 'Free Plan'}
+                </span>
+                {(currentUser?.plan === 'pro' || currentUser?.plan === 'enterprise') && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      color: currentUser?.plan === 'pro' ? 'var(--accent-green)' : 'var(--accent-orange)',
+                      background: currentUser?.plan === 'pro' ? 'rgba(17,255,153,0.1)' : 'rgba(255,128,31,0.1)',
+                      letterSpacing: '0.03em',
+                    }}
+                  >
+                    ACTIVE
+                  </span>
+                )}
+              </div>
+              <span
+                style={{
+                  color: 'var(--ash)',
+                  fontSize: 13,
+                  fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                }}
+              >
+                {searchesUsed}/{searchesLimit} searches today
               </span>
-              {' · '}
-              {searchesUsed}/{searchesLimit} searches today
-            </span>
+            </div>
           </div>
           {(currentUser?.plan === 'free' || !currentUser?.plan) && (
             <button
@@ -517,7 +682,7 @@ export default function DashboardPage() {
               style={{
                 color: 'var(--accent-blue)',
                 fontWeight: 500,
-                fontSize: '13px',
+                fontSize: 13,
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
                 transition: 'color 0.15s ease',
                 background: 'none',
@@ -527,7 +692,7 @@ export default function DashboardPage() {
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--accent-blue)')}
             >
-              Upgrade
+              Upgrade →
             </button>
           )}
         </div>

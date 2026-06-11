@@ -42,7 +42,7 @@ export default function FinalCTASection() {
           className="body-lg mb-10 max-w-lg"
           style={{ color: 'var(--charcoal)' }}
         >
-          Join millions of researchers, developers, and thinkers who trust Nexus
+          Join lakhs of researchers, developers, and thinkers across India who trust Nexus
           AI for accurate, cited answers.
         </motion.p>
 
@@ -64,7 +64,7 @@ export default function FinalCTASection() {
           className="mt-4 body-sm"
           style={{ color: 'var(--stone)' }}
         >
-          No credit card required
+No credit card or UPI required
         </motion.p>
       </motion.div>
     </section>

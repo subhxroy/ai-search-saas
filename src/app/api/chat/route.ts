@@ -74,6 +74,47 @@ export async function POST(req: NextRequest) {
     const zai = await getZAI()
     const isDeep = deepResearch === true
 
+    // ── Step 1b: Preprocess query for Indian context ──
+    // Detect currency/price patterns and append India context for better search results
+    const preprocessQuery = (q: string): string => {
+      // Pattern: "under 1k", "below 2k", "within 5k", "under 10k", etc.
+      const currencyPattern = /\b(under|below|within|under|around|about|less than|upto|up to|within)\s*(₹|rs\.?|inr)?\s*(\d+)\s*k\b/i
+      // Pattern: "1k rupees", "2k inr", "5k rs"
+      const explicitCurrencyPattern = /\b(\d+)\s*k\s*(rupees|inr|rs\.?|₹)/i
+      // Pattern: "under 1000", "below 5000" with Indian market context
+      const pricePattern = /\b(under|below|within|less than|upto|up to|around|about)\s*(₹|rs\.?|inr)?\s*(\d{3,6})\b/i
+      // Pattern: Indian terms
+      const indianTerms = /\b(rupees|inr|₹|rs\.|lakh|lakhs|crore|crores)\b/i
+      // Pattern: "best headphones", "laptop", "phone" etc. - product queries that might need India context
+      const productQuery = /\b(buy|best|top|cheapest|affordable|budget|price|cost|deal|offer|review|compare)\b/i
+      const productItem = /\b(phone|laptop|headphone|earphone|earbud|tablet|camera|tv|monitor|watch|router|speaker|charger|powerbank|mic|keyboard|mouse|printer|fridge|ac|washing machine|microwave|gadget|device)\b/i
+
+      const hasCurrencyMatch = currencyPattern.test(q) || explicitCurrencyPattern.test(q)
+      const hasPriceMatch = pricePattern.test(q)
+      const hasIndianTerms = indianTerms.test(q)
+      const isProductQuery = productQuery.test(q) && productItem.test(q)
+
+      // If the query already mentions India/INR explicitly, don't add it again
+      const alreadyIndia = /\b(india|indian|inr|₹|amazon\.in|flipkart)\b/i.test(q)
+
+      if (alreadyIndia) return q
+
+      // Expand "k" suffix to full number with INR context
+      let processed = q.replace(/\b(\d+)k\b/gi, (match, num) => {
+        return `${num}000`
+      })
+
+      // Add India context for currency/price/product queries
+      if (hasCurrencyMatch || hasPriceMatch || hasIndianTerms || isProductQuery) {
+        processed = `${processed} in India`
+      }
+
+      return processed
+    }
+
+    const processedQuery = preprocessQuery(query.trim())
+    const searchQuery = processedQuery !== query.trim() ? processedQuery : query.trim()
+
     // ── Step 1: Web Search (with retry) ──
     let sources: SearchSource[] = []
     try {
@@ -81,7 +122,7 @@ export async function POST(req: NextRequest) {
       const searchResults = await retryWithBackoff(async () => {
         return withTimeout(
           zai.functions.invoke('web_search', {
-            query: query.trim(),
+            query: searchQuery,
             num: numResults,
           }),
           15000
@@ -188,7 +229,16 @@ DEEP RESEARCH MODE ACTIVE:
       ? `SOURCES:\n${searchContext}\n${pageContext}`
       : 'No web sources were found. Answer from your general knowledge but note that you could not verify with web sources.'
 
-    const systemPrompt = `You are Nexus AI, an AI research assistant. You provide accurate, well-structured answers with inline citations.
+    const systemPrompt = `You are Nexus AI, an AI research assistant built for Indian users. You provide accurate, well-structured answers with inline citations.
+
+CRITICAL CONTEXT — YOU ARE SERVING INDIAN USERS:
+- The default currency is Indian Rupee (INR, ₹). When users say "1k", "2k", "5k", "10k", "15k", "20k", "25k", "50k", "1L", etc., they mean ₹1,000, ₹2,000, ₹5,000, ₹10,000, ₹15,000, ₹20,000, ₹25,000, ₹50,000, ₹1,00,000 (₹1 Lakh) respectively.
+- "k" = thousand (1k = ₹1,000), "L" or "lakh" = lakh (1L = ₹1,00,000)
+- Always interpret prices in INR unless the user explicitly mentions USD, dollars, or another currency.
+- When recommending products, prioritize options available in the Indian market (Amazon.in, Flipkart, Croma, Reliance Digital, etc.).
+- Show prices in ₹ (Indian Rupees) format.
+- When mentioning prices from international sources, convert to approximate INR (use approximate rate: $1 ≈ ₹83).
+- Use Indian English conventions (e.g., "lakh", "crore" when appropriate).
 
 RULES:
 1. Always cite your sources using [1], [2], [3] etc. format in your answer.

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import { useAppStore, type Source } from '@/store/app-store'
 import { handleSearch, handleFollowUp } from '@/lib/search-handler'
+import SourceCard from '@/components/SourceCard'
+import FollowUpQuestions from '@/components/FollowUpQuestions'
 import {
   Search,
   ArrowRight,
@@ -13,11 +15,11 @@ import {
   Sparkles,
   ExternalLink,
   Globe,
-  Plus,
   Send,
   Microscope,
   TrendingUp,
   Brain,
+  Zap,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Progress } from '@/components/ui/progress'
@@ -29,30 +31,30 @@ import { Progress } from '@/components/ui/progress'
 const SUGGESTIONS = [
   {
     icon: Microscope,
-    title: 'Latest breakthroughs',
-    subtitle: 'in quantum computing',
-    query: 'What are the latest breakthroughs in quantum computing?',
+    title: 'Best headphones',
+    subtitle: 'under ₹1,000 in India',
+    query: 'Best headphones under 1000 in India',
     accentVar: '--accent-blue',
   },
   {
     icon: TrendingUp,
-    title: 'AI SaaS trends',
-    subtitle: 'shaping 2026',
-    query: 'What AI SaaS trends are shaping 2026?',
+    title: 'Top mutual funds',
+    subtitle: 'for SIP in 2026',
+    query: 'Best mutual funds for SIP investment in India 2026',
     accentVar: '--accent-orange',
   },
   {
     icon: Globe,
-    title: 'Climate tech solutions',
-    subtitle: 'making real impact',
-    query: 'What climate tech solutions are making real impact?',
+    title: 'Budget travel',
+    subtitle: 'destinations from India',
+    query: 'Best budget international travel destinations from India',
     accentVar: '--accent-green',
   },
   {
     icon: Brain,
-    title: 'Healthcare AI innovations',
-    subtitle: 'transforming patient care',
-    query: 'How is AI transforming healthcare and patient care?',
+    title: 'UPSC preparation',
+    subtitle: 'strategy and resources',
+    query: 'Best UPSC preparation strategy and resources 2026',
     accentVar: '--accent-yellow',
   },
 ]
@@ -91,160 +93,6 @@ function processCitations(content: string, sources: Source[]): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Source card (inline for ChatPage)                                  */
-/* ------------------------------------------------------------------ */
-
-function ChatSourceCard({ sources }: { sources: Source[] }) {
-  if (!sources || sources.length === 0) return null
-
-  return (
-    <div className="mt-4 mb-2">
-      <div className="flex items-center gap-2 mb-2.5">
-        <Globe className="h-3.5 w-3.5" style={{ color: 'var(--ash)' }} />
-        <span
-          className="text-xs font-medium uppercase tracking-wider"
-          style={{ color: 'var(--ash)' }}
-        >
-          Sources
-        </span>
-      </div>
-      <div
-        className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {sources.map((source, i) => (
-          <a
-            key={i}
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex-shrink-0 w-56 p-3 rounded-xl transition-all duration-200"
-            style={{
-              background: 'var(--surface-card)',
-              border: '1px solid var(--hairline)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--hairline)'
-            }}
-          >
-            <div className="flex items-center gap-2 mb-1.5">
-              {source.favicon ? (
-                <img
-                  src={source.favicon}
-                  alt=""
-                  className="w-3.5 h-3.5 rounded-sm"
-                  onError={(e) => {
-                    ;(e.target as HTMLImageElement).style.display = 'none'
-                  }}
-                />
-              ) : (
-                <Globe className="w-3.5 h-3.5" style={{ color: 'var(--stone)' }} />
-              )}
-              <span
-                className="text-[11px] truncate flex-1"
-                style={{ color: 'var(--ash)' }}
-              >
-                {source.host_name || source.domain || new URL(source.url).hostname}
-              </span>
-              <ExternalLink
-                className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ color: 'var(--ash)' }}
-              />
-            </div>
-            <div
-              className="text-sm font-medium line-clamp-2 leading-snug mb-1"
-              style={{ color: 'var(--ink)' }}
-            >
-              {source.title}
-            </div>
-            {source.snippet && (
-              <div
-                className="text-xs line-clamp-2 leading-relaxed"
-                style={{ color: 'var(--charcoal)' }}
-              >
-                {source.snippet}
-              </div>
-            )}
-          </a>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Follow-up questions (inline for ChatPage)                          */
-/* ------------------------------------------------------------------ */
-
-function ChatFollowUps({
-  questions,
-  onSelect,
-}: {
-  questions: string[]
-  onSelect: (q: string) => void
-}) {
-  if (!questions || questions.length === 0) return null
-
-  return (
-    <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--hairline)' }}>
-      <div className="flex items-center gap-1.5 mb-2.5">
-        <Plus className="h-3.5 w-3.5" style={{ color: 'var(--ash)' }} />
-        <span
-          className="text-xs font-medium uppercase tracking-wider"
-          style={{ color: 'var(--ash)' }}
-        >
-          Follow up
-        </span>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        {questions.slice(0, 3).map((q, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(q)}
-            className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-200"
-            style={{
-              background: 'var(--surface-card)',
-              border: '1px solid var(--hairline)',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
-              e.currentTarget.style.background = 'var(--surface-elevated)'
-              const arrow = e.currentTarget.querySelector('.fu-arrow') as HTMLElement
-              if (arrow) arrow.style.color = 'var(--accent-blue)'
-              const text = e.currentTarget.querySelector('.fu-text') as HTMLElement
-              if (text) text.style.color = 'var(--ink)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--hairline)'
-              e.currentTarget.style.background = 'var(--surface-card)'
-              const arrow = e.currentTarget.querySelector('.fu-arrow') as HTMLElement
-              if (arrow) arrow.style.color = 'var(--stone)'
-              const text = e.currentTarget.querySelector('.fu-text') as HTMLElement
-              if (text) text.style.color = 'var(--charcoal)'
-            }}
-          >
-            <ArrowRight
-              className="h-3.5 w-3.5 shrink-0 transition-colors fu-arrow"
-              style={{ color: 'var(--stone)' }}
-            />
-            <span
-              className="text-sm leading-snug transition-colors fu-text"
-              style={{ color: 'var(--charcoal)' }}
-            >
-              {q}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
 /*  Streaming cursor                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -258,29 +106,67 @@ function StreamingCursor() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Loading dots                                                       */
+/*  Progressive loading animation                                      */
 /* ------------------------------------------------------------------ */
 
-function LoadingDots() {
+const LOADING_STAGES = [
+  { label: 'Searching', icon: Search },
+  { label: 'Reading sources', icon: Globe },
+  { label: 'Analyzing', icon: Brain },
+  { label: 'Generating answer', icon: Sparkles },
+]
+
+function ProgressiveLoader({ isDeep }: { isDeep: boolean }) {
+  const [stage, setStage] = useState(0)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    if (isDeep) return // Deep research uses its own progress bar
+    const delays = [1800, 3000, 5000]
+    const timers: ReturnType<typeof setTimeout>[] = []
+
+    delays.forEach((delay, i) => {
+      timers.push(
+        setTimeout(() => {
+          if (mountedRef.current) setStage(i + 1)
+        }, delay)
+      )
+    })
+
+    return () => {
+      mountedRef.current = false
+      timers.forEach(clearTimeout)
+    }
+  }, [isDeep])
+
+  const currentStage = isDeep ? 0 : Math.min(stage, LOADING_STAGES.length - 1)
+  const StageIcon = LOADING_STAGES[currentStage].icon
+
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex gap-1">
-        <span
-          className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]"
-          style={{ background: 'var(--accent-blue)', opacity: 0.5 }}
-        />
-        <span
-          className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]"
-          style={{ background: 'var(--accent-blue)', opacity: 0.5 }}
-        />
-        <span
-          className="w-1.5 h-1.5 rounded-full animate-bounce"
-          style={{ background: 'var(--accent-blue)', opacity: 0.5 }}
-        />
+    <div className="flex items-center gap-3 py-1">
+      <div className="flex gap-1.5">
+        {LOADING_STAGES.map((_, i) => (
+          <span
+            key={i}
+            className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+            style={{
+              background: i <= currentStage ? 'var(--accent-blue)' : 'var(--stone)',
+              opacity: i <= currentStage ? 0.85 : 0.25,
+              transform: i === currentStage ? 'scale(1.3)' : 'scale(1)',
+            }}
+          />
+        ))}
       </div>
-      <span className="text-sm" style={{ color: 'var(--ash)' }}>
-        Searching and analyzing sources...
-      </span>
+      <div className="flex items-center gap-1.5">
+        <StageIcon
+          className="h-3.5 w-3.5 transition-all duration-300"
+          style={{ color: 'var(--accent-blue)', opacity: 0.7 }}
+        />
+        <span className="text-sm transition-all duration-300" style={{ color: 'var(--ash)' }}>
+          {LOADING_STAGES[currentStage].label}…
+        </span>
+      </div>
     </div>
   )
 }
@@ -407,7 +293,9 @@ function getMarkdownComponents(sources: Source[]) {
       </strong>
     ),
     em: ({ children }: { children?: ReactNode }) => (
-      <em className="italic" style={{ color: 'var(--body)' }}>{children}</em>
+      <em className="italic" style={{ color: 'var(--body)' }}>
+        {children}
+      </em>
     ),
     hr: () => <hr style={{ borderColor: 'var(--hairline)' }} />,
     table: ({ children }: { children?: ReactNode }) => (
@@ -453,9 +341,11 @@ export default function ChatPage() {
     isDeepResearch,
     setIsDeepResearch,
     researchProgress,
+    currentSources,
   } = useAppStore()
 
   const [input, setInput] = useState('')
+  const [inputFocused, setInputFocused] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const emptyTextareaRef = useRef<HTMLTextAreaElement>(null)
@@ -492,7 +382,6 @@ export default function ChatPage() {
       if (!input.trim() || isLoading) return
       const query = input.trim()
       setInput('')
-      // Reset both textarea heights
       if (emptyTextareaRef.current) emptyTextareaRef.current.style.height = 'auto'
       if (bottomTextareaRef.current) bottomTextareaRef.current.style.height = 'auto'
       if (!conversationId) {
@@ -565,6 +454,15 @@ export default function ChatPage() {
     [researchProgress, researchSteps]
   )
 
+  /* ---- Resolve sources for a message (handles streaming vs final) ---- */
+  const getSourcesForMessage = useCallback(
+    (msg: (typeof messages)[0]) => {
+      if (msg.isStreaming) return currentSources
+      return msg.sources || []
+    },
+    [currentSources]
+  )
+
   /* ================================================================ */
   /*  RENDER                                                           */
   /* ================================================================ */
@@ -599,11 +497,27 @@ export default function ChatPage() {
                   <Sparkles className="h-7 w-7" style={{ color: 'var(--accent-blue)' }} />
                 </div>
                 <h1 className="heading-md mb-2" style={{ color: 'var(--ink)' }}>
-                  Ask anything...
+                  Ask anything
                 </h1>
-                <p className="body-sm max-w-md mx-auto">
+                <p className="body-sm max-w-md mx-auto mb-3">
                   Get AI-powered answers with real-time sources and citations
                 </p>
+                {/* Powered by AI badge */}
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                  style={{
+                    background: 'var(--surface-elevated)',
+                    border: '1px solid var(--hairline)',
+                  }}
+                >
+                  <Zap className="h-3 w-3" style={{ color: 'var(--accent-blue)' }} />
+                  <span
+                    className="text-[11px] font-medium tracking-wide uppercase"
+                    style={{ color: 'var(--stone)' }}
+                  >
+                    Powered by AI
+                  </span>
+                </div>
               </motion.div>
 
               {/* Suggestion cards */}
@@ -616,13 +530,20 @@ export default function ChatPage() {
                     key={i}
                     onClick={() => onSuggestionClick(s.query)}
                     disabled={isLoading}
-                    className="group feature-card-bordered flex items-start gap-3 text-left disabled:opacity-50 transition-all duration-200"
-                    style={{ padding: '14px 16px' }}
+                    className="group flex items-start gap-3 text-left disabled:opacity-50 transition-all duration-200"
+                    style={{
+                      padding: '14px 16px',
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--hairline)',
+                      borderRadius: '12px',
+                    }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                      e.currentTarget.style.background = 'var(--surface-elevated)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = ''
+                      e.currentTarget.style.borderColor = 'var(--hairline)'
+                      e.currentTarget.style.background = 'var(--surface-card)'
                     }}
                   >
                     <div
@@ -653,11 +574,13 @@ export default function ChatPage() {
               <motion.div variants={itemVariants} className="w-full max-w-2xl">
                 <form onSubmit={onSubmit}>
                   <div
-                    className="rounded-2xl flex items-center gap-3 px-5 py-3"
+                    className="rounded-2xl flex items-center gap-3 px-4 sm:px-5 py-3 transition-all duration-200"
                     style={{
                       background: 'var(--surface-card)',
-                      border: '1px solid var(--hairline-strong)',
-                      transition: 'border-color 0.15s ease',
+                      border: `1px solid ${inputFocused ? 'var(--ink)' : 'var(--hairline-strong)'}`,
+                      boxShadow: inputFocused
+                        ? '0 0 0 1px var(--ink), 0 0 24px -6px var(--accent-blue-glow)'
+                        : 'none',
                     }}
                   >
                     <Search className="h-5 w-5 shrink-0" style={{ color: 'var(--stone)' }} />
@@ -666,6 +589,8 @@ export default function ChatPage() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={onKeyDown}
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => setInputFocused(false)}
                       placeholder="Ask anything... get answers with sources"
                       rows={1}
                       className="flex-1 bg-transparent outline-none text-base resize-none"
@@ -679,22 +604,34 @@ export default function ChatPage() {
                       className="flex items-center gap-2 shrink-0 pl-3"
                       style={{ borderLeft: '1px solid var(--hairline)' }}
                     >
-                      <Telescope className="h-3.5 w-3.5" style={{ color: 'var(--ash)' }} />
-                      <span
-                        className="text-xs hidden sm:inline"
-                        style={{ color: 'var(--ash)' }}
-                      >
-                        Deep
-                      </span>
-                      <Switch
-                        checked={isDeepResearch}
-                        onCheckedChange={setIsDeepResearch}
-                        style={
-                          isDeepResearch
-                            ? { backgroundColor: 'var(--accent-blue)' }
-                            : undefined
-                        }
-                      />
+                      <div className="flex flex-col items-end gap-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <Telescope className="h-3.5 w-3.5" style={{ color: 'var(--ash)' }} />
+                          <span
+                            className="text-xs hidden sm:inline"
+                            style={{ color: 'var(--ash)' }}
+                          >
+                            Deep Research
+                          </span>
+                          <Switch
+                            checked={isDeepResearch}
+                            onCheckedChange={setIsDeepResearch}
+                            style={
+                              isDeepResearch
+                                ? { backgroundColor: 'var(--accent-blue)' }
+                                : undefined
+                            }
+                          />
+                        </div>
+                        {isDeepResearch && (
+                          <span
+                            className="text-[10px] hidden sm:block"
+                            style={{ color: 'var(--stone)' }}
+                          >
+                            Thorough multi-source analysis
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <button
                       type="submit"
@@ -723,35 +660,30 @@ export default function ChatPage() {
               key="messages"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="max-w-3xl mx-auto px-4 py-6 space-y-1"
+              className="max-w-3xl mx-auto px-4 sm:px-6 py-6"
             >
               {messages.map((msg, i) => {
                 if (msg.role === 'system') return null
 
-                /* ---- User message ---- */
+                /* ---- User message — Perplexity-style simple text ---- */
                 if (msg.role === 'user') {
                   return (
-                    <div key={i} className="flex justify-end mb-6">
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="max-w-[80%] sm:max-w-[70%] px-5 py-3 text-[15px] leading-relaxed"
-                        style={{
-                          background: 'var(--surface-card)',
-                          border: '1px solid var(--hairline-strong)',
-                          borderRadius: '12px 12px 4px 12px',
-                          color: 'var(--ink)',
-                        }}
+                    <div key={i} className="pt-4 pb-1 first:pt-0">
+                      <motion.h2
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        className="text-lg sm:text-xl font-medium leading-relaxed"
+                        style={{ color: 'var(--ink)' }}
                       >
                         {msg.content}
-                      </motion.div>
+                      </motion.h2>
                     </div>
                   )
                 }
 
                 /* ---- Assistant message ---- */
-                const sources = msg.sources || []
+                const sources = getSourcesForMessage(msg)
                 const followUps = msg.followUps || []
                 const processedContent = sources.length
                   ? processCitations(msg.content, sources)
@@ -761,11 +693,18 @@ export default function ChatPage() {
                 return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="mb-6 max-w-full"
+                    className="pb-6"
                   >
+                    {/* Source cards — ABOVE the answer, like Perplexity */}
+                    {sources.length > 0 && (
+                      <div className="mb-4">
+                        <SourceCard sources={sources} />
+                      </div>
+                    )}
+
                     {/* Assistant label */}
                     <div className="flex items-center gap-2 mb-2">
                       <div
@@ -793,60 +732,61 @@ export default function ChatPage() {
                       )}
                     </div>
 
-                    {/* Content card */}
-                    <div className="feature-card-bordered" style={{ padding: '16px 20px' }}>
+                    {/* Answer text — no heavy card wrapper */}
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none text-[15px] leading-relaxed"
+                      style={{ color: 'var(--body)' }}
+                    >
+                      {msg.content ? (
+                        <>
+                          <ReactMarkdown components={markdownComponents}>
+                            {processedContent}
+                          </ReactMarkdown>
+                          {msg.isStreaming && <StreamingCursor />}
+                        </>
+                      ) : msg.isStreaming ? (
+                        <ProgressiveLoader isDeep={isDeepResearch} />
+                      ) : null}
+                    </div>
+
+                    {/* Deep research progress (during streaming) */}
+                    {msg.isStreaming && isDeepResearch && researchProgress > 0 && (
                       <div
-                        className="prose prose-sm dark:prose-invert max-w-none text-[15px] leading-relaxed"
-                        style={{ color: 'var(--body)' }}
+                        className="mt-4 pt-3"
+                        style={{ borderTop: '1px solid var(--hairline)' }}
                       >
-                        {msg.content ? (
-                          <>
-                            <ReactMarkdown components={markdownComponents}>
-                              {processedContent}
-                            </ReactMarkdown>
-                            {msg.isStreaming && <StreamingCursor />}
-                          </>
-                        ) : msg.isStreaming ? (
-                          <LoadingDots />
-                        ) : null}
-                      </div>
-
-                      {/* Deep research progress (during streaming) */}
-                      {msg.isStreaming && isDeepResearch && researchProgress > 0 && (
-                        <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--hairline)' }}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs" style={{ color: 'var(--ash)' }}>
-                              {currentStep >= 0
-                                ? researchSteps[currentStep].label
-                                : 'Processing...'}
-                            </span>
-                            <span className="text-xs font-medium" style={{ color: 'var(--accent-blue)' }}>
-                              {researchProgress}%
-                            </span>
-                          </div>
-                          <Progress
-                            value={researchProgress}
-                            className="h-1.5"
-                            style={{
-                              background: 'var(--surface-elevated)',
-                            }}
-                          />
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs" style={{ color: 'var(--ash)' }}>
+                            {currentStep >= 0
+                              ? researchSteps[currentStep].label
+                              : 'Processing...'}
+                          </span>
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: 'var(--accent-blue)' }}
+                          >
+                            {researchProgress}%
+                          </span>
                         </div>
-                      )}
+                        <Progress
+                          value={researchProgress}
+                          className="h-1.5"
+                          style={{
+                            background: 'var(--surface-elevated)',
+                          }}
+                        />
+                      </div>
+                    )}
 
-                      {/* Source cards */}
-                      {!msg.isStreaming && sources.length > 0 && (
-                        <ChatSourceCard sources={sources} />
-                      )}
-
-                      {/* Follow-up questions */}
-                      {!msg.isStreaming && followUps.length > 0 && (
-                        <ChatFollowUps
+                    {/* Follow-up questions — shown after streaming completes */}
+                    {!msg.isStreaming && followUps.length > 0 && (
+                      <div className="mt-4">
+                        <FollowUpQuestions
                           questions={followUps}
                           onSelect={onFollowUpClick}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </motion.div>
                 )
               })}
@@ -861,50 +801,70 @@ export default function ChatPage() {
       {/* ============ BOTTOM INPUT BAR (visible when messages exist) ============ */}
       {!isEmpty && (
         <div
-          className="sticky bottom-0 px-4 py-3"
+          className="sticky bottom-0 px-3 sm:px-4 py-3 transition-all duration-200"
           style={{
-            background: 'var(--surface-card)',
-            borderTop: '1px solid var(--hairline)',
+            background: 'var(--canvas)',
+            borderTop: inputFocused
+              ? '1px solid var(--hairline-strong)'
+              : '1px solid var(--hairline)',
           }}
         >
           <form onSubmit={onSubmit} className="max-w-3xl mx-auto">
-            <div className="flex items-end gap-2">
+            <div
+              className="flex items-end gap-2 rounded-2xl px-3 sm:px-4 py-2.5 transition-all duration-200"
+              style={{
+                background: 'var(--surface-card)',
+                border: `1px solid ${inputFocused ? 'var(--ink)' : 'var(--hairline-strong)'}`,
+                boxShadow: inputFocused
+                  ? '0 0 0 1px var(--ink), 0 0 24px -6px var(--accent-blue-glow)'
+                  : 'none',
+              }}
+            >
               {/* Textarea */}
-              <div className="flex-1 relative">
-                <textarea
-                  ref={bottomTextareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  placeholder={
-                    conversationId
-                      ? 'Ask a follow-up...'
-                      : 'Ask anything...'
-                  }
-                  rows={1}
-                  className="text-input w-full resize-none"
-                  style={{
-                    height: 'auto',
-                    minHeight: '40px',
-                    maxHeight: '120px',
-                    padding: '10px 14px',
-                  }}
-                  disabled={isLoading}
-                />
-              </div>
+              <textarea
+                ref={bottomTextareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder={
+                  conversationId
+                    ? 'Ask a follow-up…'
+                    : 'Ask anything…'
+                }
+                rows={1}
+                className="flex-1 bg-transparent outline-none text-sm resize-none"
+                style={{
+                  color: 'var(--ink)',
+                  height: 'auto',
+                  minHeight: '24px',
+                  maxHeight: '120px',
+                  padding: '4px 0',
+                }}
+                disabled={isLoading}
+              />
 
-              {/* Controls */}
-              <div className="flex items-center gap-2 shrink-0 pb-0.5">
+              {/* Controls row */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pb-0.5">
                 {/* Deep research toggle */}
                 <div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-lg transition-all duration-200"
                   style={{
-                    background: 'var(--surface-elevated)',
-                    border: '1px solid var(--hairline)',
+                    background: isDeepResearch
+                      ? 'rgba(59,158,255,0.08)'
+                      : 'var(--surface-elevated)',
+                    border: `1px solid ${isDeepResearch ? 'rgba(59,158,255,0.2)' : 'var(--hairline)'}`,
                   }}
                 >
-                  <Telescope className="h-3 w-3" style={{ color: 'var(--ash)' }} />
-                  <span className="text-[11px] font-medium hidden sm:inline" style={{ color: 'var(--ash)' }}>
+                  <Telescope
+                    className="h-3 w-3 transition-colors duration-200"
+                    style={{ color: isDeepResearch ? 'var(--accent-blue)' : 'var(--ash)' }}
+                  />
+                  <span
+                    className="text-[11px] font-medium hidden sm:inline transition-colors duration-200"
+                    style={{ color: isDeepResearch ? 'var(--accent-blue)' : 'var(--ash)' }}
+                  >
                     Deep
                   </span>
                   <Switch
@@ -923,12 +883,12 @@ export default function ChatPage() {
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="btn-primary shrink-0"
+                  className="btn-primary shrink-0 transition-all duration-200"
                   style={{
-                    width: '40px',
-                    height: '40px',
+                    width: '36px',
+                    height: '36px',
                     padding: 0,
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                   }}
                 >
                   {isLoading ? (

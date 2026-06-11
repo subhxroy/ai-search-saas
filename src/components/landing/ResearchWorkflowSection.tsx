@@ -20,27 +20,27 @@ const STEPS: Step[] = [
   {
     icon: MessageCircle,
     title: 'Ask Your Question',
-    description: 'Type any question in natural language. No keywords needed.',
+    description: 'Type any question in natural language — English or Hindi. No keywords needed.',
   },
   {
     icon: Search,
     title: 'Web Search Instantly',
-    description: 'Our engine searches the entire web in milliseconds.',
+    description: 'Our engine searches across Indian and global sources in milliseconds.',
   },
   {
     icon: Brain,
     title: 'AI Analyzes Information',
-    description: 'Multiple AI models process and cross-reference results.',
+    description: 'Multiple AI models process and cross-reference results for accuracy.',
   },
   {
     icon: Sparkles,
     title: 'Smart Answer Generated',
-    description: 'A structured, comprehensive answer is synthesized.',
+    description: 'A structured, comprehensive answer with Indian context is synthesized.',
   },
   {
     icon: BookOpen,
     title: 'Sources Cited',
-    description: 'Every claim linked to its source. Verify anything instantly.',
+    description: 'Every claim linked to its source. Verify anything — from gazettes to journals.',
   },
 ]
 
@@ -92,7 +92,7 @@ const verticalLineVariants = {
 
 export default function ResearchWorkflowSection() {
   return (
-    <section className="glow-blue relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden">
+    <section className="glow-blue relative px-4 sm:px-6 overflow-hidden" style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}>
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div

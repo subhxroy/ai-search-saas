@@ -15,33 +15,33 @@ interface Testimonial {
 }
 
 const STATS: Stat[] = [
-  { value: '10M+', label: 'Searches completed' },
-  { value: '95%', label: 'Faster research' },
-  { value: '500K+', label: 'Active researchers' },
+  { value: '5M+', label: 'Searches completed' },
+  { value: '92%', label: 'Faster research' },
+  { value: '2L+', label: 'Active researchers' },
   { value: '4.9/5', label: 'User satisfaction' },
 ]
 
 const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      'Nexus AI cut my research time by 80%. The citations are always accurate and verifiable.',
-    author: 'Dr. Sarah Chen',
-    role: 'AI Researcher',
-    company: 'Stanford',
+      'Nexus AI cut my case research time by 80%. The citations from Indian Kanoon and Supreme Court databases are always accurate and verifiable.',
+    author: 'Adv. Arjun Mehta',
+    role: 'Corporate Lawyer',
+    company: 'Shardul Amarchand',
   },
   {
     quote:
-      'I replaced 6 different tools with Nexus. The follow-up suggestions are game-changing.',
-    author: 'Marcus Rivera',
-    role: 'Product Lead',
-    company: 'Stripe',
+      'I replaced 6 different tools with Nexus for my UPSC prep. The follow-up suggestions help me explore topics in depth without missing anything.',
+    author: 'Sneha Reddy',
+    role: 'UPSC Aspirant',
+    company: 'IAS Academy',
   },
   {
     quote:
-      "The depth of analysis with cited sources is unlike anything else. It's my daily research companion.",
-    author: 'Priya Patel',
-    role: 'Data Scientist',
-    company: 'Google',
+      "The depth of analysis with cited sources is unlike anything else. From RBI bulletins to NITI Aayog reports — it's my daily research companion.",
+    author: 'Rohan Krishnan',
+    role: 'Senior Analyst',
+    company: 'Infosys',
   },
 ]
 
@@ -75,9 +75,9 @@ export default function SocialProofSection() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <h2 className="display-xl mb-4">Trusted by researchers</h2>
+          <h2 className="display-xl mb-4">Trusted by India's best</h2>
           <p className="body-md" style={{ color: 'var(--charcoal)' }}>
-            Join millions who search smarter.
+            From UPSC aspirants to IIT researchers — join lakhs who search smarter.
           </p>
         </motion.div>
 

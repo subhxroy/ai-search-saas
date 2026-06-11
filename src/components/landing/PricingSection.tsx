@@ -17,7 +17,7 @@ interface PricingTier {
 const TIERS: PricingTier[] = [
   {
     name: 'Free',
-    price: '$0',
+    price: '₹0',
     period: '/mo',
     features: [
       '10 searches per day',
@@ -30,7 +30,7 @@ const TIERS: PricingTier[] = [
   },
   {
     name: 'Pro',
-    price: '$20',
+    price: '₹499',
     period: '/mo',
     features: [
       'Unlimited searches',
@@ -101,7 +101,7 @@ export default function PricingSection() {
         >
           <h2 className="display-xl mb-4">Simple pricing</h2>
           <p className="body-md" style={{ color: 'var(--charcoal)' }}>
-            Start free. Scale when you&apos;re ready.
+            Start free. Upgrade when you&apos;re ready. All prices in INR.
           </p>
         </motion.div>
 

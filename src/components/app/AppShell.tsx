@@ -26,6 +26,7 @@ import {
   Zap,
   ChevronRight,
   BarChart3,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -70,8 +71,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', page: 'dashboard', icon: LayoutDashboard },
-  { label: 'New Chat', page: 'chat', icon: MessageSquarePlus },
+  { label: 'Home', page: 'dashboard', icon: LayoutDashboard },
   { label: 'Deep Research', page: 'research', icon: Telescope },
   { label: 'History', page: 'history', icon: Clock },
   { label: 'Collections', page: 'collections', icon: FolderOpen },
@@ -88,6 +88,8 @@ const navItems: NavItem[] = [
 /* ------------------------------------------------------------------ */
 /*  Mobile bottom nav items                                            */
 /* ------------------------------------------------------------------ */
+
+const MOBILE_NAV_HEIGHT = 56 // px — mobile bottom nav height
 
 const mobileNavItems: { label: string; page: AppPage; icon: React.ElementType }[] = [
   { label: 'Home', page: 'dashboard', icon: LayoutDashboard },
@@ -245,7 +247,7 @@ export default function AppShell() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 8,
               background: 'none',
               border: 'none',
               cursor: 'pointer',
@@ -253,25 +255,25 @@ export default function AppShell() {
           >
             <div
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: '6px',
-                background: 'rgba(255,255,255,0.06)',
+                width: 24,
+                height: 24,
+                borderRadius: '5px',
+                background: 'var(--accent-blue)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Search style={{ width: 14, height: 14, color: '#fcfdff' }} />
+              <Search style={{ width: 13, height: 13, color: '#000000' }} />
             </div>
             <span
               className="hidden sm:inline"
               style={{
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
-                fontSize: 14,
-                fontWeight: 500,
+                fontSize: 13,
+                fontWeight: 600,
                 color: '#fcfdff',
-                letterSpacing: '-0.01em',
+                letterSpacing: '-0.02em',
               }}
             >
               Nexus AI
@@ -281,25 +283,47 @@ export default function AppShell() {
 
         {/* Right section */}
         <div className="flex items-center gap-2">
-          {/* Search shortcut */}
+          {/* Search shortcut — more discoverable */}
           <button
             onClick={() => navigate('dashboard')}
-            className="hidden sm:flex items-center gap-1.5 cursor-pointer"
+            className="hidden sm:flex items-center gap-2 cursor-pointer"
             style={{
-              padding: '6px 12px',
+              padding: '5px 14px',
               borderRadius: '8px',
               background: 'var(--surface-card)',
-              border: '1px solid var(--hairline)',
-              color: 'var(--stone)',
+              border: '1px solid var(--hairline-strong)',
+              color: 'var(--ash)',
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
-              fontSize: 12,
-              transition: 'border-color 0.15s ease',
+              fontSize: 13,
+              transition: 'border-color 0.15s ease, background 0.15s ease',
+              minWidth: 160,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--hairline-strong)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--hairline)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--ink)'
+              e.currentTarget.style.background = 'var(--surface-elevated)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+              e.currentTarget.style.background = 'var(--surface-card)'
+            }}
           >
             <Search style={{ width: 14, height: 14 }} />
-            <span>⌘K</span>
+            <span style={{ color: 'var(--stone)' }}>Search…</span>
+            <kbd
+              style={{
+                marginLeft: 'auto',
+                padding: '1px 6px',
+                borderRadius: '4px',
+                background: 'var(--surface-elevated)',
+                border: '1px solid var(--hairline)',
+                fontSize: 11,
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                color: 'var(--stone)',
+                lineHeight: '18px',
+              }}
+            >
+              ⌘K
+            </kbd>
           </button>
 
           {/* User dropdown */}
@@ -343,7 +367,12 @@ export default function AppShell() {
                   </span>
                   <span
                     className="badge-pill"
-                    style={{ fontSize: 10, padding: '2px 8px', color: 'var(--accent-blue)' }}
+                    style={{
+                      fontSize: 10,
+                      padding: '2px 8px',
+                      color: planLabel === 'Pro' ? 'var(--accent-green)' : planLabel === 'Enterprise' ? 'var(--accent-orange)' : 'var(--ash)',
+                      background: planLabel === 'Pro' ? 'rgba(17,255,153,0.1)' : planLabel === 'Enterprise' ? 'rgba(255,128,31,0.1)' : 'var(--surface-elevated)',
+                    }}
                   >
                     {planLabel}
                   </span>
@@ -463,8 +492,11 @@ export default function AppShell() {
 
       {/* ============ MAIN CONTENT ============ */}
       <main
-        className="flex-1 lg:pl-64 pb-16 lg:pb-0"
-        style={{ paddingTop: NAV_HEIGHT }}
+        className="flex-1 lg:pl-64"
+        style={{
+          paddingTop: NAV_HEIGHT,
+          paddingBottom: MOBILE_NAV_HEIGHT + 16,
+        }}
       >
         <div className="h-full">{renderPage(page)}</div>
       </main>
@@ -475,26 +507,34 @@ export default function AppShell() {
         style={{
           borderTop: '1px solid var(--hairline)',
           background: '#000000',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        <div className="flex items-center justify-around h-14 px-2">
+        <div
+          className="flex items-center justify-around px-1"
+          style={{ height: MOBILE_NAV_HEIGHT }}
+        >
           {mobileNavItems.map((item) => {
             const isActive = page === item.page
             return (
               <button
                 key={item.page}
                 onClick={() => navigate(item.page)}
-                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
+                className="flex flex-col items-center justify-center flex-1"
                 style={{
-                  color: isActive ? '#fcfdff' : 'var(--stone)',
-                  background: 'none',
+                  minHeight: 44,
+                  color: isActive ? 'var(--accent-blue)' : 'var(--stone)',
+                  background: isActive ? 'rgba(59,158,255,0.08)' : 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'color 0.15s ease',
+                  borderRadius: '8px',
+                  transition: 'color 0.15s ease, background 0.15s ease',
+                  gap: 3,
+                  padding: '4px 0',
                 }}
               >
                 <item.icon style={{ width: 20, height: 20 }} />
-                <span style={{ fontSize: 10, fontWeight: 500, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+                <span style={{ fontSize: 10, fontWeight: isActive ? 600 : 500, fontFamily: 'var(--font-inter), system-ui, sans-serif', letterSpacing: '0.01em' }}>
                   {item.label}
                 </span>
               </button>
@@ -526,8 +566,37 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
 
   return (
     <div className="flex flex-col h-full">
+      {/* New Chat button */}
+      <div style={{ padding: '12px 12px 4px' }}>
+        <button
+          onClick={() => handleNav('chat')}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            padding: '9px 16px',
+            borderRadius: '8px',
+            fontSize: 13,
+            fontWeight: 500,
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            background: 'var(--primary)',
+            color: 'var(--primary-on)',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background 0.15s ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-light)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)' }}
+        >
+          <Plus style={{ width: 15, height: 15 }} />
+          New Chat
+        </button>
+      </div>
+
       {/* Nav items */}
-      <div className="flex-1 py-3 px-3 space-y-0.5">
+      <div className="flex-1 py-2 px-3 space-y-0.5">
         {navItems.map((item) => {
           if (item.adminOnly && !isAdmin) return null
           const isActive = page === item.page
@@ -539,17 +608,18 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
                   width: '100%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 12,
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  fontSize: 14,
-                  fontWeight: 500,
+                  gap: 10,
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  fontSize: 13,
+                  fontWeight: isActive ? 500 : 400,
                   fontFamily: 'var(--font-inter), system-ui, sans-serif',
                   background: isActive ? 'var(--surface-card)' : 'transparent',
                   color: isActive ? '#fcfdff' : 'var(--ash)',
                   border: 'none',
+                  borderLeft: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
                   cursor: 'pointer',
-                  transition: 'background 0.15s ease, color 0.15s ease',
+                  transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -567,13 +637,25 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
                 <item.icon style={{ width: 16, height: 16, flexShrink: 0, color: isActive ? 'var(--accent-blue)' : 'inherit' }} />
                 <span>{item.label}</span>
                 {item.page === 'research' && (
-                  <span className="badge-pill ml-auto" style={{ fontSize: 10, padding: '2px 8px', color: 'var(--accent-green)' }}>
+                  <span
+                    className="ml-auto"
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      color: '#000000',
+                      background: 'var(--accent-green)',
+                      letterSpacing: '0.05em',
+                      lineHeight: '14px',
+                    }}
+                  >
                     NEW
                   </span>
                 )}
               </button>
               {item.separatorAfter && (
-                <div style={{ height: 1, background: 'var(--hairline)', margin: '8px 0' }} />
+                <div style={{ height: 1, background: 'var(--hairline)', margin: '8px 12px' }} />
               )}
             </div>
           )
@@ -585,16 +667,16 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
         <div className="p-3">
           <div
             style={{
-              borderRadius: '12px',
-              padding: 16,
+              borderRadius: '10px',
+              padding: 14,
               background: 'var(--surface-card)',
               border: '1px solid var(--hairline-strong)',
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Zap style={{ width: 16, height: 16, color: 'var(--accent-green)' }} />
-                <span style={{ fontSize: 14, fontWeight: 500, color: '#fcfdff' }}>Upgrade to Pro</span>
+                <Zap style={{ width: 14, height: 14, color: 'var(--accent-green)' }} />
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#fcfdff' }}>Upgrade to Pro</span>
               </div>
               <p style={{ fontSize: 12, color: 'var(--ash)', lineHeight: 1.5 }}>
                 Unlimited searches, deep research, and priority access.
