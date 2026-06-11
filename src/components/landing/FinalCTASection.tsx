@@ -14,6 +14,8 @@ const itemVariants = {
 }
 
 export default function FinalCTASection() {
+  const navigate = useAppStore((s) => s.navigate)
+
   return (
     <section className="glow-blue relative px-4 sm:px-6 overflow-hidden" style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}>
       <motion.div
@@ -37,7 +39,7 @@ export default function FinalCTASection() {
         {/* Subtitle */}
         <motion.p
           variants={itemVariants}
-          className="body-lg mb-10"
+          className="body-lg mb-10 max-w-lg"
           style={{ color: 'var(--charcoal)' }}
         >
           Join millions of researchers, developers, and thinkers who trust Nexus
@@ -46,7 +48,11 @@ export default function FinalCTASection() {
 
         {/* CTA Button — the single bright white pixel */}
         <motion.div variants={itemVariants}>
-          <button className="btn-primary inline-flex items-center gap-2" style={{ height: '44px', padding: '0 24px', fontSize: '15px' }} onClick={() => useAppStore.getState().navigate('signup')}>
+          <button
+            className="btn-primary inline-flex items-center gap-2"
+            style={{ height: '44px', padding: '0 24px', fontSize: '15px' }}
+            onClick={() => navigate('signup')}
+          >
             Get Started
             <ArrowRight className="h-4 w-4" />
           </button>

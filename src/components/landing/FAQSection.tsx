@@ -65,14 +65,20 @@ function FAQAccordionItem({
   onToggle: () => void
 }) {
   return (
-    <div className="feature-card-bordered p-0 overflow-hidden">
+    <div
+      className="feature-card-bordered p-0 overflow-hidden"
+      style={{
+        borderColor: isOpen ? 'rgba(255,255,255,0.2)' : 'var(--hairline-strong)',
+        transition: 'border-color 0.2s ease',
+      }}
+    >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-6 text-left cursor-pointer"
+        className="w-full flex items-center justify-between p-5 sm:p-6 text-left cursor-pointer"
         style={{ background: 'transparent', border: 'none' }}
         aria-expanded={isOpen}
       >
-        <span className="heading-sm pr-4" style={{ fontSize: '18px' }}>
+        <span className="heading-sm pr-4" style={{ fontSize: '16px' }}>
           {item.question}
         </span>
         <motion.div
@@ -99,7 +105,7 @@ function FAQAccordionItem({
             }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-6 pt-0">
+            <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
               <div style={{ height: '1px', background: 'var(--hairline)', marginBottom: '16px' }} />
               <p className="body-sm">
                 {item.answer}
@@ -124,7 +130,7 @@ export default function FAQSection() {
       <div className="max-w-3xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div
-          className="text-center mb-14"
+          className="text-center mb-10 sm:mb-14"
           variants={headerVariants}
           initial="hidden"
           whileInView="visible"
@@ -137,7 +143,7 @@ export default function FAQSection() {
         </motion.div>
 
         {/* FAQ Items */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {FAQ_DATA.map((item, index) => (
             <motion.div
               key={item.question}

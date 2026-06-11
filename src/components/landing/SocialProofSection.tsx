@@ -65,11 +65,11 @@ const cardVariants = {
 
 export default function SocialProofSection() {
   return (
-    <section className="glow-yellow relative px-4 sm:px-6 overflow-hidden" style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}>
+    <section id="customers" className="glow-yellow relative px-4 sm:px-6 overflow-hidden" style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}>
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-12 lg:mb-16"
           variants={headerVariants}
           initial="hidden"
           whileInView="visible"
@@ -82,7 +82,7 @@ export default function SocialProofSection() {
         </motion.div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12 lg:mb-16">
           {STATS.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -91,16 +91,28 @@ export default function SocialProofSection() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: index * 0.08 }}
-              className="feature-card flex flex-col items-center text-center"
+              className="feature-card flex flex-col items-center text-center p-6"
             >
-              <span className="display-lg mb-2">{stat.value}</span>
+              <span
+                className="mb-2"
+                style={{
+                  fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                  fontSize: 'clamp(28px, 4vw, 48px)',
+                  fontWeight: 400,
+                  lineHeight: 1.2,
+                  letterSpacing: '-0.05em',
+                  color: 'var(--ink)',
+                }}
+              >
+                {stat.value}
+              </span>
               <span className="body-sm">{stat.label}</span>
             </motion.div>
           ))}
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
           {TESTIMONIALS.map((testimonial, index) => (
             <motion.div
               key={testimonial.author}
@@ -127,7 +139,7 @@ export default function SocialProofSection() {
                     className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center"
                     style={{ background: 'var(--surface-elevated)' }}
                   >
-                    <span className="body-sm" style={{ color: 'var(--ash)' }}>
+                    <span className="body-sm" style={{ color: 'var(--ash)', fontSize: '12px' }}>
                       {testimonial.author
                         .split(' ')
                         .map((n) => n[0])

@@ -82,12 +82,18 @@ const cardVariants = {
 }
 
 export default function PricingSection() {
+  const navigate = useAppStore((s) => s.navigate)
+
   return (
-    <section className="glow-green relative px-4 sm:px-6 overflow-hidden" style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}>
+    <section
+      id="pricing"
+      className="glow-green relative px-4 sm:px-6 overflow-hidden"
+      style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}
+    >
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-12 lg:mb-16"
           variants={headerVariants}
           initial="hidden"
           whileInView="visible"
@@ -100,7 +106,7 @@ export default function PricingSection() {
         </motion.div>
 
         {/* Pricing Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 items-start">
           {TIERS.map((tier, index) => (
             <motion.div
               key={tier.name}
@@ -129,7 +135,18 @@ export default function PricingSection() {
 
               {/* Price */}
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="display-lg">{tier.price}</span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                    fontSize: 'clamp(32px, 4vw, 48px)',
+                    fontWeight: 400,
+                    lineHeight: 1.2,
+                    letterSpacing: '-0.05em',
+                    color: 'var(--ink)',
+                  }}
+                >
+                  {tier.price}
+                </span>
                 {tier.period && (
                   <span className="body-sm" style={{ color: 'var(--stone)' }}>
                     {tier.period}
@@ -152,15 +169,15 @@ export default function PricingSection() {
 
               {/* CTA Button */}
               {tier.variant === 'pro' ? (
-                <button className="btn-primary w-full" onClick={() => useAppStore.getState().navigate('signup')}>
+                <button className="btn-primary w-full" onClick={() => navigate('signup')}>
                   {tier.cta}
                 </button>
               ) : tier.variant === 'free' ? (
-                <button className="btn-outline w-full" onClick={() => useAppStore.getState().navigate('signup')}>
+                <button className="btn-outline w-full" onClick={() => navigate('signup')}>
                   {tier.cta}
                 </button>
               ) : (
-                <button className="btn-ghost w-full" onClick={() => useAppStore.getState().navigate('signup')}>
+                <button className="btn-ghost w-full" onClick={() => navigate('signup')}>
                   {tier.cta}
                 </button>
               )}

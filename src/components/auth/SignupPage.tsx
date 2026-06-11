@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Eye, EyeOff, Github } from 'lucide-react'
+import { Search, Eye, EyeOff, Github, Check } from 'lucide-react'
 import { useAppStore, loginAsDefault } from '@/store/app-store'
 
 /* ------------------------------------------------------------------ */
@@ -30,11 +30,33 @@ function getPasswordStrength(password: string) {
   if (/\d/.test(password)) score++
   if (/[^a-zA-Z0-9]/.test(password)) score++
 
-  if (score <= 1) return { label: 'Weak', color: '#ff2047', width: '20%' }
-  if (score === 2) return { label: 'Fair', color: '#ff801f', width: '40%' }
-  if (score === 3) return { label: 'Good', color: '#ffc53d', width: '60%' }
-  if (score === 4) return { label: 'Strong', color: '#11ff99', width: '80%' }
-  return { label: 'Excellent', color: '#3b9eff', width: '100%' }
+  if (score <= 1) return { label: 'Weak', color: 'var(--accent-red)', width: '20%' }
+  if (score === 2) return { label: 'Fair', color: 'var(--accent-orange)', width: '40%' }
+  if (score === 3) return { label: 'Good', color: 'var(--accent-yellow)', width: '60%' }
+  if (score === 4) return { label: 'Strong', color: 'var(--accent-green)', width: '80%' }
+  return { label: 'Excellent', color: 'var(--accent-blue)', width: '100%' }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Password requirement checker                                       */
+/* ------------------------------------------------------------------ */
+function getPasswordRequirements(password: string) {
+  return [
+    { label: '8+ characters', met: password.length >= 8 },
+    { label: 'Uppercase & lowercase', met: /[a-z]/.test(password) && /[A-Z]/.test(password) },
+    { label: 'Number', met: /\d/.test(password) },
+    { label: 'Special character', met: /[^a-zA-Z0-9]/.test(password) },
+  ]
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared auth card styles                                            */
+/* ------------------------------------------------------------------ */
+const cardStyle: React.CSSProperties = {
+  background: '#0a0a0c',
+  border: '1px solid rgba(255,255,255,0.14)',
+  borderRadius: '12px',
+  padding: '32px',
 }
 
 /* ------------------------------------------------------------------ */
@@ -50,6 +72,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const strength = useMemo(() => getPasswordStrength(password), [password])
+  const requirements = useMemo(() => getPasswordRequirements(password), [password])
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,14 +93,7 @@ export default function SignupPage() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative w-full max-w-[400px]"
       >
-        <div
-          style={{
-            background: '#0a0a0c',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: '12px',
-            padding: '32px',
-          }}
-        >
+        <div style={cardStyle}>
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-8">
             <div
@@ -119,7 +135,7 @@ export default function SignupPage() {
             >
               Create your account
             </h1>
-            <p style={{ fontSize: 14, color: '#a1a4a5', lineHeight: 1.43 }}>
+            <p style={{ fontSize: 14, color: 'var(--ash)', lineHeight: 1.43 }}>
               Start searching smarter today
             </p>
           </div>
@@ -148,7 +164,7 @@ export default function SignupPage() {
 
           {/* Divider */}
           <div style={{ position: 'relative', marginBottom: 24 }}>
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <div style={{ height: 1, background: 'var(--hairline)' }} />
             <span
               style={{
                 position: 'absolute',
@@ -158,7 +174,7 @@ export default function SignupPage() {
                 background: '#0a0a0c',
                 padding: '0 12px',
                 fontSize: 12,
-                color: '#888e90',
+                color: 'var(--stone)',
               }}
             >
               or continue with email
@@ -168,7 +184,7 @@ export default function SignupPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 14, color: '#a1a4a5' }}>Full name</label>
+              <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Full name</label>
               <input
                 type="text"
                 placeholder="Jane Doe"
@@ -180,7 +196,7 @@ export default function SignupPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 14, color: '#a1a4a5' }}>Email</label>
+              <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Email</label>
               <input
                 type="email"
                 placeholder="you@example.com"
@@ -192,11 +208,11 @@ export default function SignupPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 14, color: '#a1a4a5' }}>Password</label>
+              <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Password</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="text-input w-full"
@@ -214,7 +230,7 @@ export default function SignupPage() {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#888e90',
+                    color: 'var(--stone)',
                   }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -222,8 +238,9 @@ export default function SignupPage() {
                 </button>
               </div>
               {password.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <div style={{ height: 4, width: '100%', borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {/* Strength bar */}
+                  <div style={{ height: 4, width: '100%', borderRadius: 2, background: 'var(--hairline)', overflow: 'hidden' }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: strength.width }}
@@ -231,32 +248,53 @@ export default function SignupPage() {
                       style={{ height: '100%', borderRadius: 2, background: strength.color }}
                     />
                   </div>
-                  <p style={{ fontSize: 11, color: '#888e90' }}>
-                    Password strength: <span style={{ color: '#fcfdff', fontWeight: 500 }}>{strength.label}</span>
-                  </p>
+                  {/* Requirements */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {requirements.map((req) => (
+                      <span
+                        key={req.label}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          fontSize: 11,
+                          color: req.met ? 'var(--accent-green)' : 'var(--stone)',
+                          transition: 'color 0.15s ease',
+                        }}
+                      >
+                        {req.met && <Check style={{ width: 10, height: 10 }} />}
+                        {req.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 14, color: '#a1a4a5' }}>Confirm password</label>
+              <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Confirm password</label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="text-input w-full"
                 style={{
                   borderColor: confirmPassword.length > 0 && !passwordsMatch
-                    ? 'rgba(255,32,71,0.5)'
+                    ? 'var(--accent-red)'
                     : passwordsMatch
-                    ? 'rgba(17,255,153,0.3)'
+                    ? 'var(--accent-green)'
                     : undefined,
                 }}
                 autoComplete="new-password"
               />
               {confirmPassword.length > 0 && !passwordsMatch && (
-                <p style={{ fontSize: 11, color: '#ff2047' }}>Passwords don&apos;t match</p>
+                <p style={{ fontSize: 11, color: 'var(--accent-red)' }}>Passwords don&apos;t match</p>
+              )}
+              {passwordsMatch && (
+                <p style={{ fontSize: 11, color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Check style={{ width: 10, height: 10 }} /> Passwords match
+                </p>
               )}
             </div>
 
@@ -271,30 +309,53 @@ export default function SignupPage() {
           </form>
 
           {/* Sign in link */}
-          <p style={{ textAlign: 'center', fontSize: 14, color: '#a1a4a5', marginTop: 24 }}>
+          <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--ash)', marginTop: 24 }}>
             Already have an account?{' '}
             <button
               type="button"
               onClick={() => navigate('login')}
-              style={{ color: '#3b9eff', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}
+              style={{
+                color: 'var(--accent-blue)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
             >
               Sign in
             </button>
           </p>
 
           {/* Demo login */}
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--hairline)' }}>
             <button
               type="button"
               onClick={loginAsDefault}
               style={{
                 width: '100%',
-                fontSize: 12,
-                color: '#464a4d',
-                background: 'none',
-                border: 'none',
+                fontSize: 13,
+                fontWeight: 500,
+                color: 'var(--stone)',
+                background: 'var(--surface-card)',
+                border: '1px solid var(--hairline)',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                padding: '8px 0',
+                padding: '10px 0',
+                transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--surface-elevated)'
+                e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                e.currentTarget.style.color = 'var(--charcoal)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--surface-card)'
+                e.currentTarget.style.borderColor = 'var(--hairline)'
+                e.currentTarget.style.color = 'var(--stone)'
               }}
             >
               Demo Login — Skip to Dashboard

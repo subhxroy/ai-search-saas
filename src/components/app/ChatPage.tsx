@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
-import { useAppStore, type Message, type Source } from '@/store/app-store'
+import { useAppStore, type Source } from '@/store/app-store'
 import { handleSearch, handleFollowUp } from '@/lib/search-handler'
 import {
   Search,
@@ -108,7 +108,10 @@ function ChatSourceCard({ sources }: { sources: Source[] }) {
           Sources
         </span>
       </div>
-      <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
+      <div
+        className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {sources.map((source, i) => (
           <a
             key={i}
@@ -205,22 +208,31 @@ function ChatFollowUps({
             style={{
               background: 'var(--surface-card)',
               border: '1px solid var(--hairline)',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--hairline-strong)'
               e.currentTarget.style.background = 'var(--surface-elevated)'
+              const arrow = e.currentTarget.querySelector('.fu-arrow') as HTMLElement
+              if (arrow) arrow.style.color = 'var(--accent-blue)'
+              const text = e.currentTarget.querySelector('.fu-text') as HTMLElement
+              if (text) text.style.color = 'var(--ink)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'var(--hairline)'
               e.currentTarget.style.background = 'var(--surface-card)'
+              const arrow = e.currentTarget.querySelector('.fu-arrow') as HTMLElement
+              if (arrow) arrow.style.color = 'var(--stone)'
+              const text = e.currentTarget.querySelector('.fu-text') as HTMLElement
+              if (text) text.style.color = 'var(--charcoal)'
             }}
           >
             <ArrowRight
-              className="h-3.5 w-3.5 shrink-0 transition-colors"
+              className="h-3.5 w-3.5 shrink-0 transition-colors fu-arrow"
               style={{ color: 'var(--stone)' }}
             />
             <span
-              className="text-sm leading-snug transition-colors"
+              className="text-sm leading-snug transition-colors fu-text"
               style={{ color: 'var(--charcoal)' }}
             >
               {q}
@@ -445,23 +457,33 @@ export default function ChatPage() {
 
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const emptyTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const bottomTextareaRef = useRef<HTMLTextAreaElement>(null)
   const isEmpty = messages.length === 0
 
   /* ---- Auto-scroll on new messages/tokens ---- */
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, isLoading])
 
-  /* ---- Auto-resize textarea ---- */
+  /* ---- Auto-resize empty state textarea ---- */
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+    if (emptyTextareaRef.current) {
+      emptyTextareaRef.current.style.height = 'auto'
+      emptyTextareaRef.current.style.height = `${Math.min(emptyTextareaRef.current.scrollHeight, 120)}px`
     }
-  }, [input])
+  }, [input, isEmpty])
+
+  /* ---- Auto-resize bottom textarea ---- */
+  useEffect(() => {
+    if (bottomTextareaRef.current) {
+      bottomTextareaRef.current.style.height = 'auto'
+      bottomTextareaRef.current.style.height = `${Math.min(bottomTextareaRef.current.scrollHeight, 120)}px`
+    }
+  }, [input, !isEmpty])
 
   /* ---- Handle submit ---- */
   const onSubmit = useCallback(
@@ -470,9 +492,9 @@ export default function ChatPage() {
       if (!input.trim() || isLoading) return
       const query = input.trim()
       setInput('')
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto'
-      }
+      // Reset both textarea heights
+      if (emptyTextareaRef.current) emptyTextareaRef.current.style.height = 'auto'
+      if (bottomTextareaRef.current) bottomTextareaRef.current.style.height = 'auto'
       if (!conversationId) {
         handleSearch(query)
       } else {
@@ -508,9 +530,8 @@ export default function ChatPage() {
         if (input.trim() && !isLoading) {
           const query = input.trim()
           setInput('')
-          if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto'
-          }
+          if (emptyTextareaRef.current) emptyTextareaRef.current.style.height = 'auto'
+          if (bottomTextareaRef.current) bottomTextareaRef.current.style.height = 'auto'
           if (!conversationId) {
             handleSearch(query)
           } else {
@@ -569,7 +590,7 @@ export default function ChatPage() {
               {/* Logo & Title */}
               <motion.div variants={itemVariants} className="text-center mb-8">
                 <div
-                  className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
                   style={{
                     background: 'var(--surface-card)',
                     border: '1px solid var(--hairline-strong)',
@@ -595,8 +616,14 @@ export default function ChatPage() {
                     key={i}
                     onClick={() => onSuggestionClick(s.query)}
                     disabled={isLoading}
-                    className="group feature-card-bordered flex items-start gap-3 text-left disabled:opacity-50"
-                    style={{ padding: '16px' }}
+                    className="group feature-card-bordered flex items-start gap-3 text-left disabled:opacity-50 transition-all duration-200"
+                    style={{ padding: '14px 16px' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = ''
+                    }}
                   >
                     <div
                       className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
@@ -609,7 +636,7 @@ export default function ChatPage() {
                     </div>
                     <div className="min-w-0">
                       <div
-                        className="text-sm font-medium truncate transition-colors"
+                        className="text-sm font-medium truncate"
                         style={{ color: 'var(--ink)' }}
                       >
                         {s.title}
@@ -626,23 +653,25 @@ export default function ChatPage() {
               <motion.div variants={itemVariants} className="w-full max-w-2xl">
                 <form onSubmit={onSubmit}>
                   <div
-                    className="rounded-2xl flex items-center gap-3 px-5 py-3.5"
+                    className="rounded-2xl flex items-center gap-3 px-5 py-3"
                     style={{
                       background: 'var(--surface-card)',
                       border: '1px solid var(--hairline-strong)',
+                      transition: 'border-color 0.15s ease',
                     }}
                   >
                     <Search className="h-5 w-5 shrink-0" style={{ color: 'var(--stone)' }} />
                     <textarea
-                      ref={textareaRef}
+                      ref={emptyTextareaRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={onKeyDown}
                       placeholder="Ask anything... get answers with sources"
                       rows={1}
-                      className="flex-1 bg-transparent outline-none text-base resize-none max-h-[120px]"
+                      className="flex-1 bg-transparent outline-none text-base resize-none"
                       style={{
                         color: 'var(--ink)',
+                        maxHeight: 120,
                       }}
                       disabled={isLoading}
                     />
@@ -821,6 +850,9 @@ export default function ChatPage() {
                   </motion.div>
                 )
               })}
+
+              {/* Scroll anchor */}
+              <div ref={bottomRef} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -840,7 +872,7 @@ export default function ChatPage() {
               {/* Textarea */}
               <div className="flex-1 relative">
                 <textarea
-                  ref={textareaRef}
+                  ref={bottomTextareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
@@ -850,10 +882,11 @@ export default function ChatPage() {
                       : 'Ask anything...'
                   }
                   rows={1}
-                  className="text-input w-full resize-none max-h-[120px]"
+                  className="text-input w-full resize-none"
                   style={{
                     height: 'auto',
                     minHeight: '40px',
+                    maxHeight: '120px',
                     padding: '10px 14px',
                   }}
                   disabled={isLoading}
@@ -864,14 +897,14 @@ export default function ChatPage() {
               <div className="flex items-center gap-2 shrink-0 pb-0.5">
                 {/* Deep research toggle */}
                 <div
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
                   style={{
                     background: 'var(--surface-elevated)',
                     border: '1px solid var(--hairline)',
                   }}
                 >
                   <Telescope className="h-3 w-3" style={{ color: 'var(--ash)' }} />
-                  <span className="text-[11px] font-medium" style={{ color: 'var(--ash)' }}>
+                  <span className="text-[11px] font-medium hidden sm:inline" style={{ color: 'var(--ash)' }}>
                     Deep
                   </span>
                   <Switch

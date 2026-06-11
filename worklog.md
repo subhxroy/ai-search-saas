@@ -314,3 +314,198 @@ Stage Summary:
 - Comparison section has mobile-friendly stacked card layout
 - ChatView glassmorphism removed
 - Full browser verification passed: search, citations, follow-ups, auth flows, navigation, responsiveness
+
+---
+Task ID: 3
+Agent: AppShell, Auth & Page Routing Refinement Agent
+Task: Refine AppShell, auth pages, and page.tsx routing to production grade
+
+Work Log:
+- Read worklog.md and all target files (AppShell.tsx, LoginPage.tsx, SignupPage.tsx, ForgotPasswordPage.tsx, page.tsx, app-store.ts, globals.css, ChatView.tsx, SearchInput.tsx, search-handler.ts)
+- Refactored page.tsx:
+  - Fixed unauthenticated chat view: changed condition from `hasMessages && page === 'chat'` to `page === 'chat'`, so the chat view always renders when navigating to the chat page (fixes the "New search" button bug where clearing messages would fall through to landing page)
+  - Created EmptyChatState component: when no messages exist in chat view, shows a centered search bar, suggested query badges, and "Back to home" link
+  - Extracted LandingNavbar into a shared component with two variants: 'landing' (with logo, nav links, CTA buttons, mobile hamburger) and 'chat' (with Home/New search buttons, Sign in, Get Started)
+  - Added mobile hamburger menu for landing page navbar using Sheet component from shadcn/ui: opens a right-side drawer with nav links (Features, Pricing, Docs, Customers), Sign in button, and Get Started CTA
+  - Re-added section ID wrappers (#hero-search, #features, #customers, #pricing) for scroll-to-section navigation
+  - All nav links (Features, Pricing, Customers) scroll to correct sections; Docs navigates to signup
+- Refined AppShell.tsx:
+  - Fixed z-indexing: mobile sidebar changed from z-40 to z-50 (above backdrop z-40), desktop sidebar stays z-30
+  - Fixed `shrink: 0` CSS property to `flexShrink: 0` in React inline styles (correct React property name)
+  - Added NAV_HEIGHT constant (56px) for consistent spacing between navbar, sidebar, and main content
+  - Added hover effects to mobile hamburger button
+  - Added hover border effect to ⌘K search shortcut button
+  - Styled DropdownMenuContent with dark theme: background #0a0a0c, hairline-strong border, rounded corners
+  - Styled DropdownMenuItems with design system colors: charcoal text, accent-red for logout, surface-card focus bg
+  - Changed mobile bottom nav label from "Dashboard" to "Home" for clarity
+  - Used `var(--hairline)` consistently for all border colors instead of mixed rgba values
+- Polished LoginPage.tsx:
+  - Made "Forgot password?" link use `var(--accent-blue)` with hover opacity effect
+  - Made "Sign up" link use `var(--accent-blue)` with hover opacity effect
+  - Upgraded Demo Login button from invisible text (#464a4d) to visible button with surface-card background, hairline border, and hover effects (bg→surface-elevated, border→hairline-strong, color→charcoal)
+  - Changed divider color from hardcoded rgba to `var(--hairline)`
+  - Changed divider "or continue with email" text from #888e90 to `var(--stone)`
+  - Changed label colors from #a1a4a5 to `var(--charcoal)`
+  - Changed subtitle color from #a1a4a5 to `var(--ash)`
+  - Changed password placeholder from "••••••••" to "Enter your password"
+- Polished SignupPage.tsx:
+  - Added password requirements checklist: shows 4 requirements (8+ characters, uppercase & lowercase, number, special character) with green checkmarks and design system accent colors
+  - Upgraded password strength indicator colors from hardcoded hex to design system variables: Weak→var(--accent-red), Fair→var(--accent-orange), Good→var(--accent-yellow), Strong→var(--accent-green), Excellent→var(--accent-blue)
+  - Added "Passwords match" confirmation message with green checkmark
+  - Changed password placeholder from "••••••••" to "Create a password" / "Confirm your password"
+  - Same link/button color and Demo Login upgrades as LoginPage
+- Polished ForgotPasswordPage.tsx:
+  - Added AnimatePresence with cross-fade transition between form and success states
+  - Replaced Mail icon with CheckCircle icon in success state
+  - Upgraded success state icon background from rgba(17,255,153,0.1) to design system color
+  - Same color consistency upgrades as other auth pages
+- Removed all unused imports (X from page.tsx, Mail from ForgotPasswordPage.tsx)
+- ESLint check passes with zero errors
+- Dev server compiles without errors
+
+Stage Summary:
+- page.tsx: Unauthenticated chat view now works properly — shows ChatView when messages exist, EmptyChatState when no messages, with proper Back to Home and New search buttons
+- page.tsx: Landing page has mobile hamburger menu (Sheet drawer) with nav links, Sign in, Get Started
+- AppShell.tsx: Z-indexing fixed (mobile sidebar z-50 above backdrop z-40), consistent NAV_HEIGHT constant, styled dropdown menu, fixed React CSS property
+- All auth pages: Consistent styling with design system variables, visible Demo Login button, password requirements checklist, AnimatePresence transitions
+- All nav links scroll to correct sections (#features, #pricing, #customers) or navigate to signup
+- Zero lint errors, zero compilation errors
+
+---
+Task ID: 4+5
+Agent: ChatPage & DashboardPage Production Refinement Agent
+Task: Refine ChatPage, DashboardPage, ChatView, MessageBubble, SearchInput, FollowUpQuestions, SourceCard to production grade
+
+Work Log:
+- Read worklog.md and all 7 target files to understand current state and identify issues
+- Read supporting files: search-handler.ts, app-store.ts, globals.css, page.tsx, AppShell.tsx, api/chat/route.ts
+
+ChatPage.tsx refinements:
+- Fixed dual textarea ref issue: split single `textareaRef` into `emptyTextareaRef` + `bottomTextareaRef` for empty state and bottom bar respectively
+- Fixed auto-scroll: replaced direct `scrollTop` manipulation with `scrollIntoView({ behavior: 'smooth' })` via a `bottomRef` scroll anchor element at the end of messages
+- Fixed textarea auto-resize: separate useEffect hooks for empty state and bottom textareas with proper dependency tracking
+- Added touch scroll support for source cards: `WebkitOverflowScrolling: 'touch'` on horizontal scroll containers
+- Added hover effects on suggestion cards: border color change on hover using onMouseEnter/onMouseLeave
+- Removed unused `Message` type import and unused `activeTextarea` variable
+- Improved ChatFollowUps hover states: replaced CSS class-based hover with inline style manipulation for arrow (fu-arrow) and text (fu-text) elements, using DOM queries for fine-grained control
+
+DashboardPage.tsx refinements:
+- Added search bar focus state: border changes to `var(--ink)` on focus via `searchFocused` state
+- Added keyboard shortcut hint below search bar: "Press Enter to search · ⌘K from anywhere"
+- Added hover effects on conversation cards: border color change on hover
+- Improved trending topics: added icons to each topic (TrendingUp, Sparkles, Zap, ArrowRight, Telescope, Sparkles)
+- Made usage stats bar responsive: `flex-wrap gap-3` for mobile
+- Improved empty state messaging with better spacing
+
+ChatView.tsx refinements:
+- Replaced inline `handleFollowUp` with shared `handleFollowUp` from `@/lib/search-handler` — eliminates ~70 lines of duplicate SSE streaming code
+- Replaced loading spinner (`Loader2`) with proper bouncing dots matching ChatPage style
+- Added `bottomRef` scroll anchor for smooth auto-scroll via `scrollIntoView`
+- Added `WebkitOverflowScrolling: 'touch'` for mobile source card scrolling
+- Added hover effects on source cards matching ChatSourceCard styling
+- Updated source card styling to match ChatPage's ChatSourceCard (favicon size, host_name truncation, snippet colors)
+- Follow-up questions now wrapped in `feature-card-bordered` container for visual consistency
+- Removed unused `SourceCard` and `Loader2` imports
+
+MessageBubble.tsx refinements:
+- Added `processCitations` function to convert [1], [2] citations into clickable markdown links with source URLs
+- Added full `getMarkdownComponents` function with citation chip rendering, code blocks, tables, blockquotes — matching ChatPage's markdown rendering
+- Added `StreamingCursor` component using `var(--accent-blue)` and `animate-blink`
+- Added `LoadingDots` component using `var(--accent-blue)` bouncing dots instead of rgba(252,253,255,0.3)
+- Added inline citation chips below content when sources exist (matching ChatPage pattern)
+- User messages now use consistent border-radius `12px 12px 4px 12px` and `var(--hairline-strong)` border
+- System messages now return null (not rendered)
+
+SearchInput.tsx refinements:
+- Replaced inline SSE streaming logic (~80 lines) with `handleSearch`/`handleFollowUp` from search-handler — eliminates duplicate streaming code
+- Changed from `<input>` to `<textarea>` for multi-line support
+- Added auto-resize textarea with max height of 120px
+- Added Shift+Enter for newline support via `onKeyDown` handler
+- Fixed border: replaced hardcoded `rgba(255,255,255,0.14)` with `var(--hairline-strong)`
+- Changed border-radius from `8px` to `12px` for consistency with ChatPage
+- Added proper loading/disabled states with `handleFollowUp` for follow-up mode
+
+FollowUpQuestions.tsx refinements:
+- Removed `!important` CSS overrides (`group-hover:!text-[var(--accent-blue)]`)
+- Replaced with proper inline style manipulation via `onMouseEnter`/`onMouseLeave` using DOM queries on `.follow-up-arrow` and `.follow-up-text` class selectors
+- Added `cursor: 'pointer'` explicit style
+- Limited to 3 questions with `.slice(0, 3)`
+- Made "Follow up" label uppercase with tracking-wider to match ChatPage style
+- Changed Plus icon size to h-3.5 w-3.5 for consistency
+- Added proper section divider with `borderTop: 1px solid var(--hairline)`
+
+SourceCard.tsx refinements:
+- Added hover effects: border changes from `var(--hairline)` to `var(--hairline-strong)` on hover
+- Fixed ExternalLink icon: uses `group-hover:opacity-100 transition-opacity` instead of `!important`
+- Added `WebkitOverflowScrolling: 'touch'` for mobile horizontal scroll
+- Made "Sources" label uppercase with tracking-wider matching ChatPage
+- Changed Globe icon size to h-3.5 w-3.5 for consistency
+- Added snippet text with `var(--charcoal)` color matching ChatSourceCard
+- Added favicon error handler with fallback to Globe icon
+
+ESLint check passes cleanly with zero errors
+Dev server compiles without errors
+
+Stage Summary:
+- All 7 components refined to production grade quality
+- Consistent use of shared search-handler (handleSearch/handleFollowUp) — eliminated 3 duplicate SSE streaming implementations
+- Fixed textarea auto-resize with separate refs for empty state and bottom bar
+- Smooth auto-scroll via scrollIntoView with scroll anchor elements
+- All source cards horizontally scrollable on mobile with touch support
+- Citations [1], [2] etc. are clickable and link to source URLs in both ChatPage and ChatView
+- Follow-up questions have proper hover effects without CSS !important overrides
+- SearchInput supports multi-line input with Shift+Enter
+- All components use consistent Resend design system (var(--ink), var(--surface-card), etc.)
+- No unused imports, clean lint, clean compilation
+
+---
+Task ID: 2
+Agent: Landing Page Production Refinement Agent
+Task: Refine all landing page components to production grade quality
+
+Work Log:
+- Read worklog.md and all 9 landing page components + globals.css + app-store.ts + page.tsx
+- Fixed Footer.tsx LinkColumn anti-pattern: replaced `const navigate = useAppStore.getState().navigate` (called at render time) with `const navigate = useAppStore((s) => s.navigate)` (proper Zustand selector hook)
+- Fixed Footer.tsx: added `mt-auto` class to footer element for sticky footer behavior on short pages
+- Fixed Footer.tsx: added Search icon + Nexus AI wordmark to brand column, matching the navbar logo
+- Fixed Footer.tsx: used `status-dot` class instead of duplicated inline styles, changed `e.target` to `e.currentTarget` for hover handlers
+- Fixed Footer.tsx: added `textDecoration: 'none'` to footer links
+- Refined HeroSection.tsx: cleaned up trust indicators separator logic — removed duplicate margin styles and made separators hidden on mobile (`hidden sm:inline-block`) for cleaner wrapping
+- Refined HeroSection.tsx: added responsive search button — shows icon only on mobile, icon + "Search" text on desktop
+- Refined AIDemoSection.tsx: replaced `useAppStore.getState().navigate('signup')` in onClick with proper hook selector `const navigate = useAppStore((s) => s.navigate)`
+- Refined AIDemoSection.tsx: fixed `accent-purple` reference (non-existent CSS variable) with `accent-orange` for keyword syntax highlighting
+- Refined AIDemoSection.tsx: added explicit color style for comment syntax highlighting (var(--stone))
+- Refined AIDemoSection.tsx: improved responsive padding (px-4 sm:px-6), spacing (gap-8 lg:gap-16), and step spacing
+- Refined WhyThisProductSection.tsx: added `id="features"` to section element (removed duplicate wrapper div from page.tsx)
+- Refined WhyThisProductSection.tsx: added per-feature accent colors (accent-blue, accent-green, accent-orange, accent-yellow) instead of all using accent-blue
+- Refined WhyThisProductSection.tsx: added subtle hover effect — border color changes to rgba(255,255,255,0.2) and background elevates to var(--surface-elevated) on hover
+- Refined WhyThisProductSection.tsx: added border to icon container for visual polish
+- Refined ComparisonSection.tsx: improved responsive padding (p-4 lg:p-5) for table cells
+- Refined SocialProofSection.tsx: added `id="customers"` to section element (removed duplicate wrapper div from page.tsx)
+- Refined SocialProofSection.tsx: replaced `display-lg` class on stat values with responsive font-size using clamp() for better mobile rendering
+- Refined SocialProofSection.tsx: improved avatar initials font size (12px)
+- Refined PricingSection.tsx: added `id="pricing"` to section element (removed duplicate wrapper div from page.tsx)
+- Refined PricingSection.tsx: replaced `useAppStore.getState().navigate('signup')` with proper hook selector `const navigate = useAppStore((s) => s.navigate)`
+- Refined PricingSection.tsx: replaced `display-lg` class on price values with responsive font-size using clamp()
+- Refined FAQSection.tsx: fixed invalid style `sm: '18px'` in inline style prop to just `'16px'`
+- Refined FAQSection.tsx: added active state border color change on accordion items (var(--hairline-strong) → rgba(255,255,255,0.2))
+- Refined FAQSection.tsx: improved responsive padding (p-5 sm:p-6)
+- Refined FinalCTASection.tsx: replaced `useAppStore.getState().navigate('signup')` with proper hook selector `const navigate = useAppStore((s) => s.navigate)`
+- Refined FinalCTASection.tsx: added max-w-lg to subtitle for better text measure
+- Updated page.tsx: moved Footer outside of `<main>` element so it sticks to the bottom on short pages (main uses flex-1, Footer sits below as sibling)
+- Updated page.tsx: removed duplicate wrapper divs with IDs (#features, #customers, #pricing, #hero-search) since IDs now live on the section elements themselves
+- Verified no duplicate IDs exist in the codebase (features, customers, pricing, ai-demo each appear exactly once)
+- ESLint check passes with zero errors
+- Dev server compiles without errors
+
+Stage Summary:
+- All 9 landing page components refined to production grade
+- Footer LinkColumn navigate anti-pattern fixed: uses proper Zustand selector hook instead of getState() at render time
+- All `navigate('signup')` calls use proper Zustand hooks: AIDemoSection, PricingSection, FinalCTASection, Footer all use `useAppStore((s) => s.navigate)`
+- Footer sticks to bottom on short pages: moved outside main element, added mt-auto class
+- No duplicate IDs: each scroll-to-section ID (features, customers, pricing, ai-demo) exists exactly once on its section element
+- Fixed accent-purple (non-existent CSS variable) → accent-orange in code syntax highlighting
+- Responsive improvements across all sections: fluid font sizes with clamp(), proper padding, better mobile trust indicators
+- Hover effects on feature cards and FAQ accordion items for subtle interactivity
+- Per-feature accent colors for visual variety in WhyThisProductSection
+- Clean lint, clean compilation

@@ -20,6 +20,16 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Shared auth card styles                                            */
+/* ------------------------------------------------------------------ */
+const cardStyle: React.CSSProperties = {
+  background: '#0a0a0c',
+  border: '1px solid rgba(255,255,255,0.14)',
+  borderRadius: '12px',
+  padding: '32px',
+}
+
+/* ------------------------------------------------------------------ */
 /*  LoginPage — Resend editorial style                                 */
 /* ------------------------------------------------------------------ */
 export default function LoginPage() {
@@ -47,14 +57,7 @@ export default function LoginPage() {
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative w-full max-w-[400px]"
       >
-        <div
-          style={{
-            background: '#0a0a0c',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: '12px',
-            padding: '32px',
-          }}
-        >
+        <div style={cardStyle}>
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-8">
             <div
@@ -96,7 +99,7 @@ export default function LoginPage() {
             >
               Welcome back
             </h1>
-            <p style={{ fontSize: 14, color: '#a1a4a5', lineHeight: 1.43 }}>
+            <p style={{ fontSize: 14, color: 'var(--ash)', lineHeight: 1.43 }}>
               Sign in to continue your research
             </p>
           </div>
@@ -125,7 +128,7 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div style={{ position: 'relative', marginBottom: 24 }}>
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <div style={{ height: 1, background: 'var(--hairline)' }} />
             <span
               style={{
                 position: 'absolute',
@@ -135,7 +138,7 @@ export default function LoginPage() {
                 background: '#0a0a0c',
                 padding: '0 12px',
                 fontSize: 12,
-                color: '#888e90',
+                color: 'var(--stone)',
               }}
             >
               or continue with email
@@ -145,7 +148,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 14, color: '#a1a4a5' }}>Email</label>
+              <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Email</label>
               <input
                 type="email"
                 placeholder="you@example.com"
@@ -158,11 +161,20 @@ export default function LoginPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: 14, color: '#a1a4a5' }}>Password</label>
+                <label style={{ fontSize: 14, color: 'var(--charcoal)' }}>Password</label>
                 <button
                   type="button"
                   onClick={() => navigate('forgot-password')}
-                  style={{ fontSize: 12, color: '#3b9eff', background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--accent-blue)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                 >
                   Forgot password?
                 </button>
@@ -170,7 +182,7 @@ export default function LoginPage() {
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="text-input w-full"
@@ -188,7 +200,7 @@ export default function LoginPage() {
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#888e90',
+                    color: 'var(--stone)',
                   }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -208,30 +220,53 @@ export default function LoginPage() {
           </form>
 
           {/* Sign up link */}
-          <p style={{ textAlign: 'center', fontSize: 14, color: '#a1a4a5', marginTop: 24 }}>
+          <p style={{ textAlign: 'center', fontSize: 14, color: 'var(--ash)', marginTop: 24 }}>
             Don&apos;t have an account?{' '}
             <button
               type="button"
               onClick={() => navigate('signup')}
-              style={{ color: '#3b9eff', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}
+              style={{
+                color: 'var(--accent-blue)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                transition: 'opacity 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
             >
               Sign up
             </button>
           </p>
 
           {/* Demo login */}
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--hairline)' }}>
             <button
               type="button"
               onClick={loginAsDefault}
               style={{
                 width: '100%',
-                fontSize: 12,
-                color: '#464a4d',
-                background: 'none',
-                border: 'none',
+                fontSize: 13,
+                fontWeight: 500,
+                color: 'var(--stone)',
+                background: 'var(--surface-card)',
+                border: '1px solid var(--hairline)',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                padding: '8px 0',
+                padding: '10px 0',
+                transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--surface-elevated)'
+                e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                e.currentTarget.style.color = 'var(--charcoal)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--surface-card)'
+                e.currentTarget.style.borderColor = 'var(--hairline)'
+                e.currentTarget.style.color = 'var(--stone)'
               }}
             >
               Demo Login — Skip to Dashboard

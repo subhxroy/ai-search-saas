@@ -90,7 +90,7 @@ const navItems: NavItem[] = [
 /* ------------------------------------------------------------------ */
 
 const mobileNavItems: { label: string; page: AppPage; icon: React.ElementType }[] = [
-  { label: 'Dashboard', page: 'dashboard', icon: LayoutDashboard },
+  { label: 'Home', page: 'dashboard', icon: LayoutDashboard },
   { label: 'Chat', page: 'chat', icon: MessageSquarePlus },
   { label: 'Research', page: 'research', icon: Telescope },
   { label: 'History', page: 'history', icon: Clock },
@@ -157,6 +157,8 @@ function renderPage(page: AppPage) {
 /*  AppShell component — Resend editorial style                        */
 /* ------------------------------------------------------------------ */
 
+const NAV_HEIGHT = 56 // px — consistent top navbar height
+
 export default function AppShell() {
   const {
     page,
@@ -167,8 +169,10 @@ export default function AppShell() {
     logout,
   } = useAppStore()
 
+  // Close mobile sidebar on page change
   useEffect(() => { setSidebarOpen(false) }, [page, setSidebarOpen])
 
+  // ⌘K shortcut → focus search (navigate to dashboard)
   const handleSearchShortcut = useCallback(
     (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -201,13 +205,14 @@ export default function AppShell() {
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
         style={{
-          height: 56,
+          height: NAV_HEIGHT,
           backgroundColor: '#000000',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid var(--hairline)',
         }}
       >
         {/* Left section */}
         <div className="flex items-center gap-2">
+          {/* Mobile hamburger */}
           <button
             className="lg:hidden flex items-center justify-center"
             style={{
@@ -218,14 +223,23 @@ export default function AppShell() {
               border: 'none',
               cursor: 'pointer',
               color: 'var(--charcoal)',
+              transition: 'color 0.15s ease, background 0.15s ease',
             }}
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Toggle sidebar"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--surface-card)'
+              e.currentTarget.style.color = 'var(--ink)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--charcoal)'
+            }}
           >
             <Menu style={{ width: 20, height: 20 }} />
           </button>
 
-          {/* Logo — Resend style monochrome */}
+          {/* Logo */}
           <button
             onClick={() => navigate('dashboard')}
             style={{
@@ -279,7 +293,10 @@ export default function AppShell() {
               color: 'var(--stone)',
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
               fontSize: 12,
+              transition: 'border-color 0.15s ease',
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--hairline-strong)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--hairline)' }}
           >
             <Search style={{ width: 14, height: 14 }} />
             <span>⌘K</span>
@@ -333,32 +350,60 @@ export default function AppShell() {
                 </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent
+              align="end"
+              className="w-56"
+              style={{
+                background: '#0a0a0c',
+                border: '1px solid var(--hairline-strong)',
+                borderRadius: '12px',
+              }}
+            >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{currentUser?.name || 'User'}</p>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>{currentUser?.name || 'User'}</p>
                   <p style={{ fontSize: 12, color: 'var(--ash)' }}>
                     {currentUser?.email || 'user@nexus.ai'}
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator style={{ background: 'var(--hairline)' }} />
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => navigate('profile')}>
+                <DropdownMenuItem
+                  onClick={() => navigate('profile')}
+                  style={{ color: 'var(--charcoal)', fontSize: 14, cursor: 'pointer' }}
+                  className="focus:bg-[var(--surface-card)] focus:text-[var(--ink)]"
+                >
                   <User className="mr-2 h-4 w-4" /> Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('settings')}>
+                <DropdownMenuItem
+                  onClick={() => navigate('settings')}
+                  style={{ color: 'var(--charcoal)', fontSize: 14, cursor: 'pointer' }}
+                  className="focus:bg-[var(--surface-card)] focus:text-[var(--ink)]"
+                >
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('billing')}>
+                <DropdownMenuItem
+                  onClick={() => navigate('billing')}
+                  style={{ color: 'var(--charcoal)', fontSize: 14, cursor: 'pointer' }}
+                  className="focus:bg-[var(--surface-card)] focus:text-[var(--ink)]"
+                >
                   <CreditCard className="mr-2 h-4 w-4" /> Billing
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('api-keys')}>
+                <DropdownMenuItem
+                  onClick={() => navigate('api-keys')}
+                  style={{ color: 'var(--charcoal)', fontSize: 14, cursor: 'pointer' }}
+                  className="focus:bg-[var(--surface-card)] focus:text-[var(--ink)]"
+                >
                   <Key className="mr-2 h-4 w-4" /> API Keys
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+              <DropdownMenuSeparator style={{ background: 'var(--hairline)' }} />
+              <DropdownMenuItem
+                onClick={logout}
+                style={{ color: 'var(--accent-red)', fontSize: 14, cursor: 'pointer' }}
+                className="focus:bg-[var(--surface-card)] focus:text-[var(--accent-red)]"
+              >
                 <LogOut className="mr-2 h-4 w-4" /> Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -366,10 +411,11 @@ export default function AppShell() {
         </div>
       </header>
 
-      {/* ============ SIDEBAR BACKDROP ============ */}
+      {/* ============ SIDEBAR BACKDROP (z-40, below sidebar) ============ */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
+            key="sidebar-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -382,7 +428,7 @@ export default function AppShell() {
       </AnimatePresence>
 
       {/* ============ LEFT SIDEBAR ============ */}
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar (z-50, above backdrop z-40) */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
@@ -391,24 +437,35 @@ export default function AppShell() {
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-14 left-0 bottom-0 z-40 w-64 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
-            style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+            className="fixed left-0 bottom-0 z-50 w-64 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
+            style={{
+              top: NAV_HEIGHT,
+              background: '#06060a',
+              borderRight: '1px solid var(--hairline)',
+            }}
           >
             <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} onClose={() => setSidebarOpen(false)} />
           </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar (z-30, always visible on lg+) */}
       <aside
-        className="hidden lg:flex fixed top-14 left-0 bottom-0 z-30 w-64 flex-col overflow-y-auto scrollbar-thin"
-        style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        className="hidden lg:flex fixed left-0 bottom-0 z-30 w-64 flex-col overflow-y-auto scrollbar-thin"
+        style={{
+          top: NAV_HEIGHT,
+          background: '#06060a',
+          borderRight: '1px solid var(--hairline)',
+        }}
       >
         <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} />
       </aside>
 
       {/* ============ MAIN CONTENT ============ */}
-      <main className="flex-1 pt-14 lg:pl-64 pb-16 lg:pb-0">
+      <main
+        className="flex-1 lg:pl-64 pb-16 lg:pb-0"
+        style={{ paddingTop: NAV_HEIGHT }}
+      >
         <div className="h-full">{renderPage(page)}</div>
       </main>
 
@@ -416,7 +473,7 @@ export default function AppShell() {
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
         style={{
-          borderTop: '1px solid rgba(255,255,255,0.06)',
+          borderTop: '1px solid var(--hairline)',
           background: '#000000',
         }}
       >
@@ -507,7 +564,7 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
                   }
                 }}
               >
-                <item.icon style={{ width: 16, height: 16, shrink: 0, color: isActive ? 'var(--accent-blue)' : 'inherit' }} />
+                <item.icon style={{ width: 16, height: 16, flexShrink: 0, color: isActive ? 'var(--accent-blue)' : 'inherit' }} />
                 <span>{item.label}</span>
                 {item.page === 'research' && (
                   <span className="badge-pill ml-auto" style={{ fontSize: 10, padding: '2px 8px', color: 'var(--accent-green)' }}>

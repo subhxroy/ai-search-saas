@@ -12,22 +12,35 @@ export default function SourceCard({ sources }: SourceCardProps) {
 
   return (
     <div className="mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Globe style={{ width: 16, height: 16, color: 'var(--ash)' }} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--charcoal)' }}>Sources</span>
+      <div className="flex items-center gap-2 mb-2.5">
+        <Globe className="h-3.5 w-3.5" style={{ color: 'var(--ash)' }} />
+        <span
+          className="text-xs font-medium uppercase tracking-wider"
+          style={{ color: 'var(--ash)' }}
+        >
+          Sources
+        </span>
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+      <div
+        className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         {sources.map((source, i) => (
           <a
             key={i}
             href={source.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex-shrink-0 w-56 p-3 transition-colors"
+            className="group flex-shrink-0 w-56 p-3 rounded-xl transition-all duration-200"
             style={{
-              borderRadius: '12px',
               background: 'var(--surface-card)',
               border: '1px solid var(--hairline)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--hairline)'
             }}
           >
             <div className="flex items-center gap-2 mb-1.5">
@@ -35,24 +48,36 @@ export default function SourceCard({ sources }: SourceCardProps) {
                 <img
                   src={source.favicon}
                   alt=""
-                  className="w-4 h-4 rounded-sm"
+                  className="w-3.5 h-3.5 rounded-sm"
                   onError={(e) => {
                     ;(e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />
               ) : (
-                <Globe style={{ width: 16, height: 16, color: 'var(--ash)' }} />
+                <Globe className="w-3.5 h-3.5" style={{ color: 'var(--stone)' }} />
               )}
-              <span className="truncate flex-1" style={{ fontSize: 12, color: 'var(--ash)' }}>
-                {source.host_name || new URL(source.url).hostname}
+              <span
+                className="text-[11px] truncate flex-1"
+                style={{ color: 'var(--ash)' }}
+              >
+                {source.host_name || source.domain || new URL(source.url).hostname}
               </span>
-              <ExternalLink style={{ width: 12, height: 12, color: 'var(--ash)', opacity: 0, transition: 'opacity 0.15s' }} className="group-hover:!opacity-100" />
+              <ExternalLink
+                className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ color: 'var(--ash)' }}
+              />
             </div>
-            <div className="line-clamp-2 leading-snug" style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>
+            <div
+              className="text-sm font-medium line-clamp-2 leading-snug mb-1"
+              style={{ color: 'var(--ink)' }}
+            >
               {source.title}
             </div>
             {source.snippet && (
-              <div className="line-clamp-2 mt-1 leading-relaxed" style={{ fontSize: 12, color: 'var(--ash)' }}>
+              <div
+                className="text-xs line-clamp-2 leading-relaxed"
+                style={{ color: 'var(--charcoal)' }}
+              >
                 {source.snippet}
               </div>
             )}

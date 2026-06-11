@@ -4,6 +4,10 @@ import { db } from '@/lib/db'
 
 export const maxDuration = 60
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
 interface SearchSource {
   title: string
   url: string
@@ -13,6 +17,43 @@ interface SearchSource {
   domain: string
   rank: number
 }
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms)
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (e) => { clearTimeout(timer); reject(e) }
+    )
+  })
+}
+
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries = 2,
+  baseDelay = 1000
+): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, baseDelay * (attempt + 1)))
+      }
+    }
+  }
+  throw lastError
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main handler                                                       */
+/* ------------------------------------------------------------------ */
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,14 +74,19 @@ export async function POST(req: NextRequest) {
     const zai = await getZAI()
     const isDeep = deepResearch === true
 
-    // ── Step 1: Web Search ──
+    // ── Step 1: Web Search (with retry) ──
     let sources: SearchSource[] = []
     try {
-      const numResults = isDeep ? 12 : 8
-      const searchResults = await zai.functions.invoke('web_search', {
-        query: query.trim(),
-        num: numResults,
-      })
+      const numResults = isDeep ? 10 : 6
+      const searchResults = await retryWithBackoff(async () => {
+        return withTimeout(
+          zai.functions.invoke('web_search', {
+            query: query.trim(),
+            num: numResults,
+          }),
+          15000
+        )
+      }, 2, 1000)
 
       sources = (searchResults || []).map(
         (r: Record<string, unknown>, i: number) => ({
@@ -54,37 +100,44 @@ export async function POST(req: NextRequest) {
         })
       )
     } catch (searchErr) {
-      console.error('Web search failed:', searchErr)
-      // Continue without sources — the LLM can still answer
+      console.error('Web search failed after retries:', searchErr)
+      // Continue without sources — the LLM can still answer from general knowledge
     }
 
-    // ── Step 2: Read top pages (with aggressive error handling) ──
+    // ── Step 2: Read top pages in parallel (with timeout per page) ──
     const pageContents: string[] = []
     const topCount = isDeep ? 3 : 2
     const topUrls = sources.slice(0, topCount).map((s) => s.url)
 
-    for (const url of topUrls) {
-      try {
-        const pageResult = await zai.functions.invoke('page_reader', { url })
-        if (pageResult?.data?.html) {
-          const text = (pageResult.data.html as string)
-            .replace(/<[^>]*>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .slice(0, isDeep ? 3000 : 2000)
-          if (text.length > 50) pageContents.push(text)
+    if (topUrls.length > 0) {
+      const pagePromises = topUrls.map((url) =>
+        withTimeout(
+          zai.functions.invoke('page_reader', { url }),
+          8000
+        ).then((pageResult) => {
+          if (pageResult?.data?.html) {
+            const text = (pageResult.data.html as string)
+              .replace(/<[^>]*>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .slice(0, isDeep ? 3000 : 2000)
+            if (text.length > 50) return text
+          }
+          return null
+        }).catch(() => null)
+      )
+
+      const results = await Promise.allSettled(pagePromises)
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          pageContents.push(result.value)
         }
-        // Small delay between page reads
-        await new Promise((r) => setTimeout(r, 300))
-      } catch (pageErr) {
-        // Silently skip failed page reads — this is expected
-        console.warn('Page read failed for:', url, (pageErr as Error)?.message?.slice(0, 100))
       }
     }
 
     // ── Step 3: Build context ──
     const searchContext = sources
-      .slice(0, isDeep ? 10 : 6)
+      .slice(0, isDeep ? 8 : 5)
       .map(
         (s, i) =>
           `[${i + 1}] ${s.title}\nURL: ${s.url}\n${s.snippet}`
@@ -112,7 +165,7 @@ export async function POST(req: NextRequest) {
     const historyMessages =
       conversation?.messages
         ?.filter((m) => m.role === 'user' || m.role === 'assistant')
-        .slice(-8)
+        .slice(-6)
         .map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
@@ -163,17 +216,22 @@ ${sourcesBlock}`
       { role: 'user' as const, content: query },
     ]
 
-    // ── Step 6: Call LLM ──
+    // ── Step 6: Call LLM (with retry) ──
     let fullAnswer: string
     try {
-      const completion = await zai.chat.completions.create({
-        messages,
-        thinking: { type: 'disabled' },
-      })
+      const completion = await retryWithBackoff(async () => {
+        return withTimeout(
+          zai.chat.completions.create({
+            messages,
+            thinking: { type: 'disabled' },
+          }),
+          30000
+        )
+      }, 2, 1500)
       fullAnswer = completion.choices?.[0]?.message?.content || ''
     } catch (llmErr) {
-      console.error('LLM call failed:', llmErr)
-      fullAnswer = 'I encountered an error generating a response. The AI service may be temporarily unavailable. Please try again.'
+      console.error('LLM call failed after retries:', llmErr)
+      fullAnswer = 'I encountered an error generating a response. The AI service may be temporarily unavailable. Please try again in a moment.'
     }
 
     if (!fullAnswer) {
@@ -226,7 +284,7 @@ ${sourcesBlock}`
     }
 
     // ── Step 9: Stream the response back ──
-    const sources_ = sources.slice(0, isDeep ? 10 : 6)
+    const sources_ = sources.slice(0, isDeep ? 8 : 5)
     const answerText_ = answerText
     const followUps_ = followUps
 

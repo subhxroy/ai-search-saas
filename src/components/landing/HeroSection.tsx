@@ -62,8 +62,6 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
       className="relative flex flex-col items-center justify-center px-4 sm:px-6"
       style={{ paddingTop: 'var(--spacing-band, 128px)', paddingBottom: '96px' }}
     >
-      {/* Clean editorial band — no atmospheric glow in hero */}
-
       <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto">
         {/* ── Headline ── */}
         <motion.h1
@@ -73,9 +71,9 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           animate="visible"
           custom={0}
         >
-          Search for
+          The AI search
           <br />
-          developers
+          engine
         </motion.h1>
 
         {/* ── Subtitle ── */}
@@ -140,7 +138,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
                     cursor: input.trim() ? 'pointer' : 'not-allowed',
                   }}
                 >
-                  Search
+                  <span className="hidden sm:inline">Search</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -157,7 +155,6 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
           custom={3}
         >
           <span
-            className="mr-0.5"
             style={{
               color: 'var(--stone)',
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
@@ -212,7 +209,7 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
 
         {/* ── Trust Indicators ── */}
         <motion.div
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+          className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
           variants={fadeInUp}
           initial="hidden"
           animate="visible"
@@ -222,14 +219,12 @@ export default function HeroSection({ onSearch }: HeroSectionProps) {
             <div key={label} className="flex items-center gap-2">
               {i > 0 && (
                 <span
-                  className="mr-6"
+                  className="hidden sm:inline-block"
                   style={{
                     width: '1px',
                     height: '12px',
                     background: 'var(--hairline-strong)',
-                    display: 'inline-block',
-                    marginLeft: '-12px',
-                    marginRight: '12px',
+                    marginRight: '8px',
                   }}
                 />
               )}

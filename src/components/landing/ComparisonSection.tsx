@@ -61,7 +61,7 @@ export default function ComparisonSection() {
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Section Header */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-12 lg:mb-16"
           variants={headerVariants}
           initial="hidden"
           whileInView="visible"
@@ -78,7 +78,7 @@ export default function ComparisonSection() {
           {/* Column Headers */}
           <div className="grid grid-cols-2" style={{ borderBottom: '1px solid var(--hairline)' }}>
             {/* Traditional Search */}
-            <div className="flex items-center gap-3 p-6" style={{ borderRight: '1px solid var(--hairline)' }}>
+            <div className="flex items-center gap-3 p-5 lg:p-6" style={{ borderRight: '1px solid var(--hairline)' }}>
               <div
                 className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: 'var(--surface-elevated)' }}
@@ -91,7 +91,7 @@ export default function ComparisonSection() {
             </div>
 
             {/* Nexus AI */}
-            <div className="flex items-center gap-3 p-6">
+            <div className="flex items-center gap-3 p-5 lg:p-6">
               <div
                 className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: 'var(--surface-elevated)' }}
@@ -120,7 +120,7 @@ export default function ComparisonSection() {
             >
               {/* Traditional Column */}
               <div
-                className="flex items-center gap-3 p-5"
+                className="flex items-center gap-3 p-4 lg:p-5"
                 style={{
                   borderRight: '1px solid var(--hairline)',
                   opacity: 0.6,
@@ -146,7 +146,7 @@ export default function ComparisonSection() {
               </div>
 
               {/* Nexus AI Column */}
-              <div className="flex items-center gap-3 p-5">
+              <div className="flex items-center gap-3 p-4 lg:p-5">
                 <div
                   className="h-6 w-6 rounded flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(17,255,153,0.1)' }}

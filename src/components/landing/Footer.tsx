@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Github, Twitter, Linkedin } from 'lucide-react'
+import { Github, Twitter, Linkedin, Search } from 'lucide-react'
 import { useAppStore } from '@/store/app-store'
 
 /* ────────────────────────────────────────────
@@ -65,18 +65,20 @@ const columnVariants = {
    Link column component
    ──────────────────────────────────────────── */
 
+type FooterAction = 'scroll-features' | 'scroll-pricing' | 'signup'
+
 function LinkColumn({
   heading,
   links,
   index,
 }: {
   heading: string
-  links: { label: string; action: 'scroll-features' | 'scroll-pricing' | 'signup' }[]
+  links: { label: string; action: FooterAction }[]
   index: number
 }) {
-  const navigate = useAppStore.getState().navigate
+  const navigate = useAppStore((s) => s.navigate)
 
-  const handleClick = (action: 'scroll-features' | 'scroll-pricing' | 'signup') => {
+  const handleClick = (action: FooterAction) => {
     if (action === 'scroll-features') {
       document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
     } else if (action === 'scroll-pricing') {
@@ -124,12 +126,13 @@ function LinkColumn({
                 letterSpacing: 0,
                 color: 'var(--ash)',
                 transition: 'color 0.15s ease',
+                textDecoration: 'none',
               }}
               onMouseEnter={(e) => {
-                ;(e.target as HTMLElement).style.color = 'var(--ink)'
+                ;(e.currentTarget as HTMLElement).style.color = 'var(--ink)'
               }}
               onMouseLeave={(e) => {
-                ;(e.target as HTMLElement).style.color = 'var(--ash)'
+                ;(e.currentTarget as HTMLElement).style.color = 'var(--ash)'
               }}
             >
               {link.label}
@@ -148,9 +151,10 @@ function LinkColumn({
 export default function Footer() {
   return (
     <footer
+      className="mt-auto"
       style={{
         background: '#000000',
-        padding: '64px 32px',
+        padding: '64px 24px',
       }}
     >
       <motion.div
@@ -161,9 +165,7 @@ export default function Footer() {
         viewport={{ once: true, amount: 0.1 }}
       >
         {/* ── 4-column grid ── */}
-        <div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-8 mb-12"
-        >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-12">
           {/* Brand column */}
           <motion.div
             custom={0}
@@ -174,9 +176,32 @@ export default function Footer() {
             className="col-span-2 sm:col-span-1"
           >
             {/* Wordmark */}
-            <span className="heading-sm" style={{ display: 'block', marginBottom: '12px' }}>
-              Nexus AI
-            </span>
+            <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '5px',
+                  background: 'rgba(255,255,255,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Search style={{ width: 12, height: 12, color: '#fcfdff' }} />
+              </div>
+              <span
+                style={{
+                  fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                  fontSize: '15px',
+                  fontWeight: 500,
+                  color: 'var(--ink)',
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                Nexus AI
+              </span>
+            </div>
 
             {/* Description */}
             <p className="body-sm" style={{ marginBottom: '20px', maxWidth: '260px' }}>
@@ -191,17 +216,7 @@ export default function Footer() {
                 gap: '8px',
               }}
             >
-              <span
-                className="status-dot"
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '9999px',
-                  background: 'var(--accent-green)',
-                  display: 'inline-block',
-                  flexShrink: 0,
-                }}
-              />
+              <span className="status-dot" />
               <span
                 style={{
                   fontFamily: 'var(--font-inter), system-ui, sans-serif',

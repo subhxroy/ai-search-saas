@@ -25,7 +25,7 @@ const serifFont = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus AI — Search for developers",
+  title: "Nexus AI — The AI Search Engine",
   description:
     "AI-powered search engine with real-time citations. Ask anything, get verified answers from across the web.",
   keywords: ["AI search", "perplexity", "research", "citations", "web search"],

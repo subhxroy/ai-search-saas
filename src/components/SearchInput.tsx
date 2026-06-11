@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Search, ArrowRight, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/store/app-store'
+import { handleSearch, handleFollowUp } from '@/lib/search-handler'
 
 interface SearchInputProps {
   showSuggestions?: boolean
@@ -10,154 +11,99 @@ interface SearchInputProps {
   isNewSearch?: boolean
 }
 
-export default function SearchInput({ showSuggestions = false, isNewSearch = true }: SearchInputProps) {
+export default function SearchInput({ isNewSearch = true }: SearchInputProps) {
   const [input, setInput] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const {
-    isLoading,
-    addMessage,
-    navigate,
-    setIsLoading,
-    setCurrentSources,
-    setCurrentFollowUps,
-    setConversationId,
-    conversationId,
-    updateLastAssistantMessage,
-    finalizeLastAssistantMessage,
-    clearMessages,
-  } = useAppStore()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { isLoading } = useAppStore()
 
   useEffect(() => {
-    inputRef.current?.focus()
+    textareaRef.current?.focus()
   }, [])
 
-  const handleSubmit = async (query: string) => {
-    if (!query.trim() || isLoading) return
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+    }
+  }, [input])
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+
+    const query = input.trim()
     setInput('')
 
-    if (isNewSearch) {
-      clearMessages()
-      setConversationId(null)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
     }
 
-    addMessage({ role: 'user', content: query.trim() })
-    navigate('chat')
-    setIsLoading(true)
-    setCurrentSources([])
-    setCurrentFollowUps([])
-
-    // Add placeholder assistant message
-    addMessage({ role: 'assistant', content: '', isStreaming: true })
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: query.trim(),
-          conversationId: isNewSearch ? undefined : (conversationId || undefined),
-        }),
-      })
-
-      if (!res.ok) {
-        updateLastAssistantMessage('Sorry, something went wrong. Please try again.')
-        finalizeLastAssistantMessage([], [])
-        setIsLoading(false)
-        return
-      }
-
-      const reader = res.body?.getReader()
-      if (!reader) {
-        updateLastAssistantMessage('Failed to read response.')
-        finalizeLastAssistantMessage([], [])
-        setIsLoading(false)
-        return
-      }
-
-      const decoder = new TextDecoder()
-      let accumulatedText = ''
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const parsed = JSON.parse(line.slice(6))
-              if (parsed.type === 'sources') {
-                setCurrentSources(parsed.data)
-              } else if (parsed.type === 'token') {
-                accumulatedText += parsed.data
-                updateLastAssistantMessage(accumulatedText)
-              } else if (parsed.type === 'followups') {
-                setCurrentFollowUps(parsed.data)
-              } else if (parsed.type === 'done') {
-                setConversationId(parsed.data.conversationId)
-              }
-            } catch {
-              // skip malformed JSON
-            }
-          }
-        }
-      }
-      // Finalize the message
-      const state = useAppStore.getState()
-      finalizeLastAssistantMessage(state.currentSources, state.currentFollowUps)
-    } catch {
-      updateLastAssistantMessage('Network error. Please check your connection and try again.')
-      finalizeLastAssistantMessage([], [])
-    } finally {
-      setIsLoading(false)
+    if (isNewSearch) {
+      handleSearch(query)
+    } else {
+      handleFollowUp(query)
     }
   }
 
-  const onFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    handleSubmit(input)
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (input.trim() && !isLoading) {
+        const query = input.trim()
+        setInput('')
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'
+        }
+        if (isNewSearch) {
+          handleSearch(query)
+        } else {
+          handleFollowUp(query)
+        }
+      }
+    }
   }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <form onSubmit={onFormSubmit} className="relative">
+      <form onSubmit={handleSubmit}>
         <div
-          className="relative flex items-center"
+          className="relative flex items-end"
           style={{
             background: 'var(--surface-card)',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: '8px',
-            height: 48,
+            border: '1px solid var(--hairline-strong)',
+            borderRadius: '12px',
+            minHeight: 48,
+            padding: '6px 6px 6px 14px',
+            transition: 'border-color 0.15s ease',
           }}
         >
           <Search
-            className="absolute left-4"
+            className="shrink-0 mb-2"
             style={{ width: 18, height: 18, color: 'var(--ash)' }}
           />
-          <input
-            ref={inputRef}
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={isNewSearch ? "Ask anything..." : "Ask a follow-up..."}
+            onKeyDown={onKeyDown}
+            placeholder={isNewSearch ? 'Ask anything... get answers with sources' : 'Ask a follow-up...'}
+            rows={1}
             disabled={isLoading}
-            className="w-full pl-12 pr-14 bg-transparent border-none outline-none text-base disabled:opacity-50"
+            className="flex-1 bg-transparent border-none outline-none resize-none pl-3 pr-2 disabled:opacity-50"
             style={{
               color: 'var(--ink)',
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
               fontSize: 14,
               lineHeight: 1.43,
+              minHeight: 36,
+              maxHeight: 120,
             }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 flex items-center justify-center"
+            className="shrink-0 flex items-center justify-center mb-0.5"
             style={{
               width: 36,
               height: 36,
@@ -165,7 +111,7 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
               background: input.trim() ? 'var(--primary)' : 'var(--surface-elevated)',
               color: input.trim() ? 'var(--primary-on)' : 'var(--stone)',
               border: 'none',
-              cursor: input.trim() ? 'pointer' : 'not-allowed',
+              cursor: input.trim() && !isLoading ? 'pointer' : 'not-allowed',
               transition: 'background 0.15s ease',
             }}
           >

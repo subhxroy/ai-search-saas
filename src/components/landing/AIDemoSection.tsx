@@ -72,6 +72,7 @@ export default function AIDemoSection() {
   const [typingComplete, setTypingComplete] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
   const hasStarted = useRef(false)
+  const navigate = useAppStore((s) => s.navigate)
 
   // IntersectionObserver to start typing when section enters viewport
   useEffect(() => {
@@ -139,13 +140,16 @@ export default function AIDemoSection() {
           currentTag = part.slice(1, -1)
         } else if (part.startsWith('</')) {
           const className =
-            currentTag === 'kw' ? 'text-[var(--accent-purple,#c084fc)]' :
-            currentTag === 'cm' ? 'text-[var(--stone)] italic' :
+            currentTag === 'kw' ? 'text-[var(--accent-orange)]' :
+            currentTag === 'cm' ? 'italic' :
             currentTag === 'str' ? 'text-[var(--accent-green)]' :
             currentTag === 'fn' ? 'text-[var(--accent-blue)]' :
             currentTag === 'obj' ? 'text-[var(--accent-yellow)]' :
             ''
-          elements.push(<span key={keyIdx++} className={className}>{buffer}</span>)
+          const colorStyle =
+            currentTag === 'cm' ? { color: 'var(--stone)' } :
+            {}
+          elements.push(<span key={keyIdx++} className={className} style={colorStyle}>{buffer}</span>)
           buffer = ''
           currentTag = ''
         } else {
@@ -171,10 +175,10 @@ export default function AIDemoSection() {
       className="glow-blue"
       style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}
     >
-      <div className="max-w-[1120px] mx-auto px-6 relative z-10">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <motion.div
-          className="mb-16"
+          className="mb-12 lg:mb-16"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
@@ -190,33 +194,33 @@ export default function AIDemoSection() {
         </motion.div>
 
         {/* 2-up split: narrative left, code window right */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Left: Pipeline narrative */}
           <motion.div
-            className="space-y-8"
+            className="space-y-6 lg:space-y-8"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.15 }}
           >
-            {PIPELINE_STEPS.map((step, index) => (
-              <div key={step.step} className="flex gap-5">
+            {PIPELINE_STEPS.map((step) => (
+              <div key={step.step} className="flex gap-4 lg:gap-5">
                 <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
                   style={{ background: 'var(--surface-elevated)', border: '1px solid var(--hairline)' }}
                 >
-                  <span className="code-md text-[var(--accent-blue)]">{step.step}</span>
+                  <span className="code-md" style={{ color: 'var(--accent-blue)' }}>{step.step}</span>
                 </div>
                 <div>
-                  <h3 className="heading-sm mb-1.5">{step.title}</h3>
+                  <h3 className="heading-sm mb-1">{step.title}</h3>
                   <p className="body-sm">{step.description}</p>
                 </div>
               </div>
             ))}
 
-            <div className="pt-4">
+            <div className="pt-2 lg:pt-4">
               <button
                 className="btn-primary gap-2"
-                onClick={() => useAppStore.getState().navigate('signup')}
+                onClick={() => navigate('signup')}
               >
                 Try it free
                 <ArrowRight className="h-4 w-4" />
@@ -251,12 +255,12 @@ export default function AIDemoSection() {
                   <pre className="whitespace-pre">
                     {renderCode(displayedCode)}
                     {!typingComplete && (
-                      <span className="inline-block w-[2px] h-[16px] bg-[var(--accent-blue)] animate-blink align-middle ml-[1px]" />
+                      <span className="inline-block w-[2px] h-[16px] animate-blink align-middle ml-[1px]" style={{ background: 'var(--accent-blue)' }} />
                     )}
                   </pre>
                 )}
                 {!isVisible && (
-                  <pre className="whitespace-pre text-[var(--stone)]">
+                  <pre className="whitespace-pre" style={{ color: 'var(--stone)' }}>
                     {'// Loading...'}
                   </pre>
                 )}
@@ -271,7 +275,16 @@ export default function AIDemoSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <span className="body-sm" style={{ color: 'var(--stone)', fontSize: '12px', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                <span
+                  className="body-sm"
+                  style={{
+                    color: 'var(--stone)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                  }}
+                >
                   Sources
                 </span>
                 <div className="space-y-1.5">

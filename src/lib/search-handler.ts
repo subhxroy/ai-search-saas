@@ -28,8 +28,19 @@ export async function handleSearch(query: string) {
 
     if (!res.ok) {
       const errorText = await res.text().catch(() => '')
-      console.error('Chat API error:', res.status, errorText)
-      store.updateLastAssistantMessage('I encountered an error while searching. Please try again.')
+      console.error('Chat API error:', res.status, errorText?.slice(0, 200))
+
+      // Provide user-friendly error messages based on status code
+      let userMessage = 'I encountered an error while searching. Please try again.'
+      if (res.status === 502 || res.status === 504) {
+        userMessage = 'The search service is taking too long to respond. Please try again in a moment.'
+      } else if (res.status === 429) {
+        userMessage = 'Too many requests. Please wait a moment and try again.'
+      } else if (res.status === 500) {
+        userMessage = 'Something went wrong on our end. Please try again.'
+      }
+
+      store.updateLastAssistantMessage(userMessage)
       store.finalizeLastAssistantMessage([], [])
       store.setIsLoading(false)
       return
@@ -116,7 +127,11 @@ export async function handleFollowUp(question: string) {
     })
 
     if (!res.ok) {
-      store.updateLastAssistantMessage('Something went wrong. Please try again.')
+      let userMessage = 'Something went wrong. Please try again.'
+      if (res.status === 502 || res.status === 504) {
+        userMessage = 'The search service is taking too long. Please try again in a moment.'
+      }
+      store.updateLastAssistantMessage(userMessage)
       store.finalizeLastAssistantMessage([], [])
       store.setIsLoading(false)
       return

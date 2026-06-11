@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Loader2,
   Zap,
+  TrendingUp,
 } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
@@ -64,12 +65,12 @@ function formatDate(dateStr: string): string {
 /* ------------------------------------------------------------------ */
 
 const trendingTopics = [
-  'AI trends 2026',
-  'Quantum computing',
-  'Climate tech',
-  'SaaS growth',
-  'Space exploration',
-  'Biotech breakthroughs',
+  { label: 'AI trends 2026', icon: TrendingUp },
+  { label: 'Quantum computing', icon: Sparkles },
+  { label: 'Climate tech', icon: Zap },
+  { label: 'SaaS growth', icon: ArrowRight },
+  { label: 'Space exploration', icon: Telescope },
+  { label: 'Biotech breakthroughs', icon: Sparkles },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -98,6 +99,7 @@ export default function DashboardPage() {
     useAppStore()
 
   const [query, setQuery] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loadingConversations, setLoadingConversations] = useState(true)
 
@@ -187,8 +189,8 @@ export default function DashboardPage() {
           <div
             style={{
               background: 'var(--surface-card)',
-              border: '1px solid var(--hairline-strong)',
-              borderRadius: '8px',
+              border: `1px solid ${searchFocused ? 'var(--ink)' : 'var(--hairline-strong)'}`,
+              borderRadius: '12px',
               height: '48px',
               display: 'flex',
               alignItems: 'center',
@@ -196,7 +198,6 @@ export default function DashboardPage() {
               padding: '0 16px',
               transition: 'border-color 0.15s ease',
             }}
-            className="group"
           >
             <Search
               className="h-4 w-4 shrink-0"
@@ -206,6 +207,8 @@ export default function DashboardPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
               placeholder="Ask anything... get answers with sources"
               className="flex-1 bg-transparent outline-none text-base"
               style={{
@@ -244,7 +247,7 @@ export default function DashboardPage() {
                 height: '32px',
                 width: '32px',
                 padding: 0,
-                borderRadius: '6px',
+                borderRadius: '8px',
                 minWidth: '32px',
               }}
             >
@@ -254,6 +257,12 @@ export default function DashboardPage() {
                 <ArrowRight className="h-4 w-4" />
               )}
             </button>
+          </div>
+          {/* Keyboard shortcut hint */}
+          <div className="flex justify-center mt-2">
+            <span style={{ fontSize: 11, color: 'var(--stone)' }}>
+              Press <kbd style={{ padding: '1px 4px', borderRadius: '3px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 10 }}>Enter</kbd> to search · <kbd style={{ padding: '1px 4px', borderRadius: '3px', background: 'var(--surface-elevated)', border: '1px solid var(--hairline)', fontSize: 10 }}>⌘K</kbd> from anywhere
+            </span>
           </div>
         </form>
       </motion.div>
@@ -278,7 +287,7 @@ export default function DashboardPage() {
             style={{ borderRadius: '9999px', gap: '8px' }}
           >
             <Telescope className="h-3.5 w-3.5" style={{ color: 'var(--accent-orange)' }} />
-            Deep Research Mode
+            Deep Research
           </button>
           <button
             onClick={() => navigate('history')}
@@ -311,6 +320,9 @@ export default function DashboardPage() {
               fontSize: '13px',
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
               transition: 'color 0.15s ease',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ash)')}
@@ -365,8 +377,14 @@ export default function DashboardPage() {
                 onClick={() => {
                   navigate('chat', { id: conv.id })
                 }}
-                className="feature-card-bordered text-left group"
+                className="feature-card-bordered text-left group transition-all duration-200"
                 style={{ padding: '16px', cursor: 'pointer' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--hairline-strong)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = ''
+                }}
               >
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <h3
@@ -374,7 +392,6 @@ export default function DashboardPage() {
                     style={{
                       color: 'var(--ink)',
                       fontFamily: 'var(--font-inter), system-ui, sans-serif',
-                      transition: 'color 0.15s ease',
                     }}
                   >
                     {conv.title}
@@ -411,7 +428,7 @@ export default function DashboardPage() {
             style={{ padding: '32px' }}
           >
             <MessageSquare
-              className="h-8 w-8 mx-auto mb-2"
+              className="h-8 w-8 mx-auto mb-3"
               style={{ color: 'var(--ash)' }}
             />
             <p className="body-sm" style={{ color: 'var(--charcoal)' }}>No conversations yet</p>
@@ -435,10 +452,10 @@ export default function DashboardPage() {
         <div className="flex flex-wrap gap-2">
           {trendingTopics.map((topic) => (
             <button
-              key={topic}
-              onClick={() => onTopicClick(topic)}
+              key={topic.label}
+              onClick={() => onTopicClick(topic.label)}
               disabled={isLoading}
-              className="badge-pill"
+              className="badge-pill flex items-center gap-1.5"
               style={{
                 cursor: isLoading ? 'not-allowed' : 'pointer',
                 opacity: isLoading ? 0.5 : 1,
@@ -458,7 +475,8 @@ export default function DashboardPage() {
                 e.currentTarget.style.background = 'var(--surface-elevated)'
               }}
             >
-              {topic}
+              <topic.icon className="h-3 w-3" style={{ color: 'var(--stone)' }} />
+              {topic.label}
             </button>
           ))}
         </div>
@@ -467,7 +485,7 @@ export default function DashboardPage() {
       {/* ======== USAGE STATS ======== */}
       <motion.div variants={itemVariants}>
         <div
-          className="feature-card-bordered flex items-center justify-between"
+          className="feature-card-bordered flex items-center justify-between flex-wrap gap-3"
           style={{ padding: '12px 16px' }}
         >
           <div className="flex items-center gap-2">
@@ -502,6 +520,9 @@ export default function DashboardPage() {
                 fontSize: '13px',
                 fontFamily: 'var(--font-inter), system-ui, sans-serif',
                 transition: 'color 0.15s ease',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ink)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--accent-blue)')}
