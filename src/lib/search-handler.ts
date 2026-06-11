@@ -4,6 +4,7 @@ export async function handleSearch(query: string) {
   const store = useAppStore.getState()
   if (!query.trim() || store.isLoading) return
 
+  // Clear previous state
   store.clearMessages()
   store.setConversationId(null)
   store.addMessage({ role: 'user', content: query.trim() })
@@ -26,7 +27,9 @@ export async function handleSearch(query: string) {
     })
 
     if (!res.ok) {
-      store.updateLastAssistantMessage('Sorry, something went wrong. Please try again.')
+      const errorText = await res.text().catch(() => '')
+      console.error('Chat API error:', res.status, errorText)
+      store.updateLastAssistantMessage('I encountered an error while searching. Please try again.')
       store.finalizeLastAssistantMessage([], [])
       store.setIsLoading(false)
       return
@@ -34,7 +37,7 @@ export async function handleSearch(query: string) {
 
     const reader = res.body?.getReader()
     if (!reader) {
-      store.updateLastAssistantMessage('Failed to read response.')
+      store.updateLastAssistantMessage('Failed to read response. Please try again.')
       store.finalizeLastAssistantMessage([], [])
       store.setIsLoading(false)
       return
@@ -69,7 +72,7 @@ export async function handleSearch(query: string) {
               store.setResearchProgress(parsed.data)
             }
           } catch {
-            // skip
+            // skip malformed JSON lines
           }
         }
       }
@@ -80,7 +83,8 @@ export async function handleSearch(query: string) {
       finalState.currentSources,
       finalState.currentFollowUps
     )
-  } catch {
+  } catch (err) {
+    console.error('Search handler error:', err)
     store.updateLastAssistantMessage(
       'Network error. Please check your connection and try again.'
     )
@@ -112,7 +116,7 @@ export async function handleFollowUp(question: string) {
     })
 
     if (!res.ok) {
-      store.updateLastAssistantMessage('Sorry, something went wrong.')
+      store.updateLastAssistantMessage('Something went wrong. Please try again.')
       store.finalizeLastAssistantMessage([], [])
       store.setIsLoading(false)
       return
@@ -164,8 +168,9 @@ export async function handleFollowUp(question: string) {
       finalState.currentSources,
       finalState.currentFollowUps
     )
-  } catch {
-    store.updateLastAssistantMessage('Network error.')
+  } catch (err) {
+    console.error('Follow-up error:', err)
+    store.updateLastAssistantMessage('Network error. Please try again.')
     store.finalizeLastAssistantMessage([], [])
   } finally {
     store.setIsLoading(false)

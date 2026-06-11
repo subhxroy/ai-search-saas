@@ -10,6 +10,7 @@ interface SearchSource {
   snippet: string
   favicon: string
   host_name: string
+  domain: string
   rank: number
 }
 
@@ -32,28 +33,36 @@ export async function POST(req: NextRequest) {
     const zai = await getZAI()
     const isDeep = deepResearch === true
 
-    // Step 1: Search the web (more results for deep research)
-    const numResults = isDeep ? 12 : 8
-    const searchResults = await zai.functions.invoke('web_search', {
-      query: query.trim(),
-      num: numResults,
-    })
-
-    const sources: SearchSource[] = (searchResults || []).map(
-      (r: Record<string, unknown>, i: number) => ({
-        title: (r.name as string) || '',
-        url: (r.url as string) || '',
-        snippet: (r.snippet as string) || '',
-        favicon: (r.favicon as string) || '',
-        host_name: (r.host_name as string) || '',
-        rank: i + 1,
+    // ── Step 1: Web Search ──
+    let sources: SearchSource[] = []
+    try {
+      const numResults = isDeep ? 12 : 8
+      const searchResults = await zai.functions.invoke('web_search', {
+        query: query.trim(),
+        num: numResults,
       })
-    )
 
-    // Step 2: Read top pages SEQUENTIALLY to avoid rate limits
+      sources = (searchResults || []).map(
+        (r: Record<string, unknown>, i: number) => ({
+          title: (r.name as string) || '',
+          url: (r.url as string) || '',
+          snippet: (r.snippet as string) || '',
+          favicon: (r.favicon as string) || '',
+          host_name: (r.host_name as string) || '',
+          domain: (r.host_name as string) || (r.url ? new URL(r.url as string).hostname.replace('www.', '') : ''),
+          rank: i + 1,
+        })
+      )
+    } catch (searchErr) {
+      console.error('Web search failed:', searchErr)
+      // Continue without sources — the LLM can still answer
+    }
+
+    // ── Step 2: Read top pages (with aggressive error handling) ──
+    const pageContents: string[] = []
     const topCount = isDeep ? 3 : 2
     const topUrls = sources.slice(0, topCount).map((s) => s.url)
-    const pageContents: string[] = []
+
     for (const url of topUrls) {
       try {
         const pageResult = await zai.functions.invoke('page_reader', { url })
@@ -63,16 +72,17 @@ export async function POST(req: NextRequest) {
             .replace(/\s+/g, ' ')
             .trim()
             .slice(0, isDeep ? 3000 : 2000)
-          if (text.length > 0) pageContents.push(text)
+          if (text.length > 50) pageContents.push(text)
         }
-        // Small delay between page reads to avoid rate limits
-        await new Promise((r) => setTimeout(r, 500))
-      } catch {
-        // Skip failed page reads
+        // Small delay between page reads
+        await new Promise((r) => setTimeout(r, 300))
+      } catch (pageErr) {
+        // Silently skip failed page reads — this is expected
+        console.warn('Page read failed for:', url, (pageErr as Error)?.message?.slice(0, 100))
       }
     }
 
-    // Step 3: Build context
+    // ── Step 3: Build context ──
     const searchContext = sources
       .slice(0, isDeep ? 10 : 6)
       .map(
@@ -86,13 +96,18 @@ export async function POST(req: NextRequest) {
         ? `\n\nAdditional extracted content:\n${pageContents.map((c, i) => `--- Page ${i + 1} ---\n${c}`).join('\n\n')}`
         : ''
 
-    // Step 4: Get conversation history if exists
-    let conversation = conversationId
-      ? await db.conversation.findUnique({
+    // ── Step 4: Get conversation history ──
+    let conversation = null
+    try {
+      if (conversationId) {
+        conversation = await db.conversation.findUnique({
           where: { id: conversationId },
           include: { messages: { orderBy: { createdAt: 'asc' } } },
         })
-      : null
+      }
+    } catch (dbErr) {
+      console.warn('Failed to load conversation history:', dbErr)
+    }
 
     const historyMessages =
       conversation?.messages
@@ -103,7 +118,7 @@ export async function POST(req: NextRequest) {
           content: m.content,
         })) || []
 
-    // Step 5: Build system prompt
+    // ── Step 5: Build system prompt ──
     const deepResearchInstructions = isDeep
       ? `
 DEEP RESEARCH MODE ACTIVE:
@@ -116,18 +131,22 @@ DEEP RESEARCH MODE ACTIVE:
 - Highlight any contradictions between sources.`
       : ''
 
-    const systemPrompt = `You are an AI research assistant called Nexus AI. You provide accurate, well-structured answers with inline citations.
+    const sourcesBlock = sources.length > 0
+      ? `SOURCES:\n${searchContext}\n${pageContext}`
+      : 'No web sources were found. Answer from your general knowledge but note that you could not verify with web sources.'
+
+    const systemPrompt = `You are Nexus AI, an AI research assistant. You provide accurate, well-structured answers with inline citations.
 
 RULES:
 1. Always cite your sources using [1], [2], [3] etc. format in your answer.
 2. The citation numbers correspond to the source numbers provided below.
-3. Be comprehensive but concise.
+3. Be comprehensive but concise. Write in a clear, helpful style.
 4. Structure your answer with clear sections using markdown.
 5. If multiple sources support a claim, cite all relevant sources.
 6. Do not invent facts not supported by the provided sources.
-7. Maintain a useful research tone.
+7. Maintain a useful research tone — like a knowledgeable colleague.
 8. At the end of your answer, always generate exactly 3 follow-up questions.
-9. Format the follow-up questions EXACTLY like this at the very end of your response:
+9. Format the follow-up questions EXACTLY like this at the very end:
 
 ---
 **Related Questions:**
@@ -136,9 +155,7 @@ RULES:
 3. [Third follow-up question]
 ${deepResearchInstructions}
 
-SOURCES:
-${searchContext}
-${pageContext}`
+${sourcesBlock}`
 
     const messages = [
       { role: 'assistant' as const, content: systemPrompt },
@@ -146,17 +163,24 @@ ${pageContext}`
       { role: 'user' as const, content: query },
     ]
 
-    // Step 6: Call LLM
-    const completion = await zai.chat.completions.create({
-      messages,
-      thinking: { type: 'disabled' },
-    })
+    // ── Step 6: Call LLM ──
+    let fullAnswer: string
+    try {
+      const completion = await zai.chat.completions.create({
+        messages,
+        thinking: { type: 'disabled' },
+      })
+      fullAnswer = completion.choices?.[0]?.message?.content || ''
+    } catch (llmErr) {
+      console.error('LLM call failed:', llmErr)
+      fullAnswer = 'I encountered an error generating a response. The AI service may be temporarily unavailable. Please try again.'
+    }
 
-    const fullAnswer =
-      completion.choices?.[0]?.message?.content ||
-      'I was unable to generate a response. Please try again.'
+    if (!fullAnswer) {
+      fullAnswer = 'I was unable to generate a response. Please try again.'
+    }
 
-    // Step 7: Parse follow-up questions
+    // ── Step 7: Parse follow-up questions ──
     let answerText = fullAnswer
     let followUps: string[] = []
 
@@ -175,13 +199,13 @@ ${pageContext}`
 
     if (followUps.length === 0) {
       followUps = [
-        `Tell me more about ${query.split(' ').slice(0, 5).join(' ')}`,
-        'What are the latest developments on this topic?',
-        'Can you compare different perspectives on this?',
+        `What are the latest developments regarding ${query.split(' ').slice(0, 5).join(' ')}?`,
+        'Can you compare different perspectives on this topic?',
+        'What should I explore next related to this?',
       ]
     }
 
-    // Step 8: Create conversation if needed
+    // ── Step 8: Create conversation if needed ──
     let conversationId_: string = conversation?.id || ''
     if (!conversation) {
       try {
@@ -197,12 +221,11 @@ ${pageContext}`
         conversationId_ = newConv.id
       } catch (dbErr) {
         console.error('Failed to create conversation:', dbErr)
-        // Generate a fallback ID so streaming still works
         conversationId_ = `local-${Date.now()}`
       }
     }
 
-    // Step 9: Stream the response back, then save to DB
+    // ── Step 9: Stream the response back ──
     const sources_ = sources.slice(0, isDeep ? 10 : 6)
     const answerText_ = answerText
     const followUps_ = followUps
@@ -210,7 +233,7 @@ ${pageContext}`
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
-        // Send sources
+        // Send sources first
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ type: 'sources', data: sources_ })}\n\n`
@@ -248,7 +271,7 @@ ${pageContext}`
 
         controller.close()
 
-        // Save to DB in background
+        // Save to DB in background (non-blocking)
         try {
           await db.message.create({
             data: {
@@ -270,7 +293,7 @@ ${pageContext}`
                   url: s.url,
                   snippet: s.snippet,
                   favicon: s.favicon,
-                  domain: s.host_name,
+                  domain: s.domain || s.host_name,
                   rank: s.rank,
                 })),
               },
