@@ -758,3 +758,112 @@ Stage Summary:
 - ChatPage polished: Perplexity-style layout, progressive loading, focus glow
 - AppShell polished: sidebar accent borders, new chat button, mobile safe area
 - Full browser verification passed for both unauthenticated and authenticated flows
+
+---
+Task ID: 1
+Agent: Search API Route Developer
+Task: Create /api/search REST endpoint
+
+Work Log:
+- Read worklog.md and existing /api/chat/route.ts to understand the search pipeline pattern
+- Read /src/lib/zai.ts and /src/lib/db.ts to understand shared utility imports
+- Read prisma/schema.prisma to understand database models (Conversation, Message, Source, UsageLog)
+- Created /src/app/api/search/route.ts with full implementation:
+  - POST handler: accepts { query, deepResearch?, apiKey? } JSON body
+  - GET handler: accepts ?query=...&deepResearch=false query params
+  - OPTIONS handler: returns 200 with CORS headers for preflight requests
+  - Shared handleSearch() core pipeline function used by both GET and POST
+- Reused same search pipeline as /api/chat/route.ts:
+  - preprocessQuery() function for Indian context (k→000 expansion, "in India" suffix for product/currency queries)
+  - Web search via zai.functions.invoke('web_search') with retryWithBackoff and withTimeout
+  - Page reader via zai.functions.invoke('page_reader') with parallel reading of top 2-3 pages
+  - LLM synthesis via zai.chat.completions.create (non-streaming, waits for full response)
+  - Same system prompt with Indian/INR context (1k=₹1,000, lakh/crore conventions, Amazon.in/Flipkart priority)
+  - Same follow-up question parsing from LLM output
+- Key differences from /api/chat (streaming SSE):
+  - Returns structured JSON instead of SSE streaming
+  - Response shape: { answer, sources[{title,url,snippet,relevance}], followUps, conversationId, query }
+  - Sources include relevance scores: rank 1→0.95, rank 2→0.90, decreasing by 0.05 (computeRelevance function)
+  - CORS headers on all responses: Access-Control-Allow-Origin: *, Allow-Methods: GET/POST/OPTIONS, Allow-Headers: Content-Type/Authorization/X-API-Key
+  - Error responses are JSON with { error, code } shape and proper HTTP status codes (400, 502, 503, 500)
+- Saves conversation and messages to database (same as chat route) plus UsageLog entry
+- maxDuration = 60 set for the route
+- Lint check passes cleanly
+- Live API testing verified:
+  - OPTIONS preflight returns 200 with CORS headers
+  - GET without query returns 400 { error: "Query is required", code: "MISSING_QUERY" }
+  - POST without query returns 400 { error: "Query is required", code: "MISSING_QUERY" }
+  - POST with valid query returns 200 with full structured JSON: answer, sources with relevance scores, followUps, conversationId
+  - CORS headers present on all responses (access-control-allow-origin: *, etc.)
+
+Stage Summary:
+- /api/search REST API endpoint fully implemented and tested
+- Supports POST (JSON body) and GET (query params) with shared search pipeline
+- Returns structured JSON (NOT SSE streaming) matching the code example on the landing page
+- Sources include relevance scores (1st=0.95, 2nd=0.90, decreasing by 0.05)
+- Full CORS support with preflight OPTIONS handler
+- Graceful error handling with JSON error responses and proper HTTP status codes
+- Reuses Indian context preprocessing and system prompt from /api/chat
+- Saves to database: conversation, messages, sources, usage log
+- Zero lint errors, verified with live API calls
+
+---
+Task ID: 2+4
+Agent: SDK Developer
+Task: Create Nexus AI SDK file and serve route
+
+Work Log:
+- Read worklog.md to understand project context (Nexus AI Perplexity clone with full landing page, auth, chat, and 20+ app pages)
+- Read /api/chat/route.ts and /api/search/route.ts to understand the existing API structure — /api/search already returns structured JSON matching the SDK response format
+- Created /public/sdk/ directory
+- Created /public/sdk/nexus-ai.js SDK file with:
+  - NexusAI class with constructor({ baseUrl, apiKey, timeout })
+  - .search({ query, deepResearch }) method that POSTs to /api/search and returns SearchResponse
+  - NexusAIError custom error class with code, status, and message
+  - Full JSDoc type definitions: NexusAIOptions, SearchOptions, Source, SearchResponse, NexusAIErrorCode
+  - AbortController-based request timeout (default 60s)
+  - Browser detection for baseUrl default (window.location.origin in browser, https://api.nexusai.dev in Node.js)
+  - API key support via body.apiKey, Authorization header, and X-API-Key header
+  - ESM/CommonJS dual export via module.exports + window globals
+  - Comprehensive JSDoc documentation with @example blocks matching the landing page code example
+- Created /api/sdk/route.ts with:
+  - GET handler that reads /public/sdk/nexus-ai.js and serves it with Content-Type: application/javascript
+  - Content-Disposition: attachment; filename="nexus-ai.js" header for download
+  - CORS headers (Access-Control-Allow-Origin: *, methods, headers)
+  - OPTIONS handler for CORS preflight requests
+  - Cache-Control: public, max-age=3600 for CDN caching
+- Verified /api/sdk endpoint: HTTP 200, correct Content-Type, Content-Disposition, CORS headers, 13,658 bytes served
+- Verified CORS preflight: OPTIONS returns 200
+- Verified static file access: /sdk/nexus-ai.js also accessible directly from /public
+- ESLint check passes cleanly with zero errors
+
+Stage Summary:
+- Nexus AI SDK v1.0.0 created at /public/sdk/nexus-ai.js — self-contained single JS file, no external dependencies
+- SDK supports both ESM and CommonJS, works in browsers and Node.js
+- /api/sdk endpoint serves the SDK file with proper headers for download (Content-Disposition: attachment)
+- SDK interfaces with existing /api/search route (POST, returns structured JSON with answer, sources, followUps, conversationId, query)
+- Custom NexusAIError class with machine-readable error codes (MISSING_QUERY, NETWORK_ERROR, TIMEOUT, LLM_ERROR, etc.)
+- Full JSDoc documentation matching the landing page code example exactly
+
+---
+Task ID: 9
+Agent: Main Orchestrator
+Task: Make search.ts API work + create downloadable SDK + update AIDemoSection with live demo
+
+Work Log:
+- Created /api/search REST endpoint (POST/GET/OPTIONS) that returns structured JSON with answer, sources (with relevance scores), followUps, conversationId, query
+- Created downloadable Nexus AI SDK at /public/sdk/nexus-ai.js with NexusAI class, .search() method, NexusAIError class, full JSDoc docs, ESM/CommonJS dual support
+- Created /api/sdk route to serve the SDK file with proper Content-Disposition header for download
+- Rewrote AIDemoSection with: live "Try it" demo (input + Run button + quick query suggestions), tabbed code window (search.ts / response.json / live result), Copy code button, Download SDK button, "Run it locally" section with SDK usage snippet
+- Verified live search works: "Best headphones under 1k" returns ₹1,000 INR results with Indian sources (Reddit r/headphonesindia, Myntra, Flipkart)
+- Verified hero search works: "Best smartphones under 15k" correctly interprets as ₹15,000 INR with Indian sources (Gadgets360, Flipkart, Samsung India, 91Mobiles)
+- Verified /api/search direct call returns structured JSON with relevance scores
+- Verified /api/sdk serves SDK file with correct headers (Content-Disposition: attachment, Content-Type: application/javascript)
+- Zero lint errors, zero browser console errors
+
+Stage Summary:
+- /api/search endpoint fully functional: returns structured JSON (answer, sources with relevance, followUps, conversationId)
+- SDK downloadable at /api/sdk or /sdk/nexus-ai.js — works in Node.js and browsers
+- AIDemoSection now has live interactive demo with real API calls
+- Localization confirmed working: AI interprets "1k" as ₹1,000 INR, sources include Indian sites
+- All features verified via agent browser
