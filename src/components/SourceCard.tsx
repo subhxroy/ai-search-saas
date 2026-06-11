@@ -1,7 +1,7 @@
 'use client'
 
 import { ExternalLink, Globe } from 'lucide-react'
-import type { Source } from '@/store/chat-store'
+import type { Source } from '@/store/app-store'
 
 interface SourceCardProps {
   sources: Source[]
@@ -13,8 +13,8 @@ export default function SourceCard({ sources }: SourceCardProps) {
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-3">
-        <Globe className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">Sources</span>
+        <Globe style={{ width: 16, height: 16, color: 'var(--ash)' }} />
+        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--charcoal)' }}>Sources</span>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
         {sources.map((source, i) => (
@@ -23,7 +23,12 @@ export default function SourceCard({ sources }: SourceCardProps) {
             href={source.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex-shrink-0 w-56 p-3 rounded-xl border border-border bg-card hover:bg-accent hover:border-primary/30 transition-all"
+            className="group flex-shrink-0 w-56 p-3 transition-colors"
+            style={{
+              borderRadius: '12px',
+              background: 'var(--surface-card)',
+              border: '1px solid var(--hairline)',
+            }}
           >
             <div className="flex items-center gap-2 mb-1.5">
               {source.favicon ? (
@@ -36,18 +41,18 @@ export default function SourceCard({ sources }: SourceCardProps) {
                   }}
                 />
               ) : (
-                <Globe className="w-4 h-4 text-muted-foreground" />
+                <Globe style={{ width: 16, height: 16, color: 'var(--ash)' }} />
               )}
-              <span className="text-xs text-muted-foreground truncate flex-1">
+              <span className="truncate flex-1" style={{ fontSize: 12, color: 'var(--ash)' }}>
                 {source.host_name || new URL(source.url).hostname}
               </span>
-              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ExternalLink style={{ width: 12, height: 12, color: 'var(--ash)', opacity: 0, transition: 'opacity 0.15s' }} className="group-hover:!opacity-100" />
             </div>
-            <div className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
+            <div className="line-clamp-2 leading-snug" style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}>
               {source.title}
             </div>
             {source.snippet && (
-              <div className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+              <div className="line-clamp-2 mt-1 leading-relaxed" style={{ fontSize: 12, color: 'var(--ash)' }}>
                 {source.snippet}
               </div>
             )}

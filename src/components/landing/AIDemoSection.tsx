@@ -2,72 +2,72 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import {
-  MessageCircle,
-  Search,
-  BarChart3,
-  Sparkles,
-  BookOpen,
-  User,
-  Bot,
-  Globe,
-  ExternalLink,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
-const FLOW_STEPS = [
-  { icon: MessageCircle, label: 'Ask' },
-  { icon: Search, label: 'Search' },
-  { icon: BarChart3, label: 'Analyze' },
-  { icon: Sparkles, label: 'Generate' },
-  { icon: BookOpen, label: 'Cite' },
-]
+const CODE_CONTENT = `const response = await nexus.search({
+  query: "Best AI startups 2026",
+  deepResearch: false,
+});
 
-const DEMO_ANSWER = `The AI SaaS landscape in 2026 is defined by several high-impact opportunities that leverage advances in foundation models and vertical-specific data. [1]
+// Sources found: 8
+// Response time: 1.2s
 
-First, **AI-native customer support platforms** are seeing explosive growth. Companies like Decagon and Sierra are building autonomous agents that handle complex multi-turn conversations, replacing traditional rule-based chatbots. The key differentiator is their ability to reason through customer issues, access backend systems, and resolve tickets end-to-end without human intervention. [2]
+console.log(response.answer);
+// → "The AI SaaS landscape in 2026 is defined
+//    by several high-impact opportunities..."
 
-Second, **vertical AI copilots** for specialized industries — legal, healthcare, and financial services — represent a massive opportunity. These tools go beyond generic chatbots by embedding deep domain knowledge and regulatory compliance into their workflows. Harvey for legal, Hippocratic AI for healthcare, and Ramp for finance are leading examples. [3]
-
-Third, **AI-powered data analytics and business intelligence** is being reinvented. Instead of writing SQL queries or building dashboards manually, natural language interfaces now let anyone query complex datasets. Tools like TextQL and Parseur are making data accessible to non-technical teams, dramatically reducing time-to-insight.
-
-Finally, **AI agent infrastructure** — the picks-and-shovels layer — is perhaps the biggest opportunity. Frameworks for building, orchestrating, and monitoring autonomous AI agents are essential as every industry adopts agentic workflows. Companies providing observability, safety guardrails, and multi-agent orchestration will become foundational infrastructure.`
+console.log(response.sources);
+// → [
+//     { title: "Top AI SaaS Trends 2026",
+//       url: "techcrunch.com/ai-saas-trends",
+//       relevance: 0.94 },
+//     { title: "Autonomous AI Agents",
+//       url: "forbes.com/ai-agents-enterprise",
+//       relevance: 0.91 },
+//     ...6 more
+//   ]`
 
 const DEMO_SOURCES = [
   {
     title: 'Top AI SaaS Trends Reshaping 2026',
     url: 'techcrunch.com/ai-saas-trends-2026',
-    snippet: 'The AI SaaS market is projected to reach $280B by 2026, with vertical solutions leading growth...',
   },
   {
     title: 'Autonomous AI Agents in Enterprise',
     url: 'forbes.com/autonomous-ai-agents',
-    snippet: 'Enterprise adoption of autonomous agents has grown 340% year-over-year, with customer support leading...',
   },
   {
     title: 'Vertical AI: The Next Frontier',
     url: 'a16z.com/vertical-ai-copilots',
-    snippet: 'Domain-specific AI copilots are outperforming general-purpose tools by 3-5x in accuracy and user satisfaction...',
   },
 ]
 
-const DEMO_FOLLOWUPS = [
-  'What funding trends exist for AI SaaS startups?',
-  'How do AI agents differ from traditional automation?',
-  'Which industries are adopting AI fastest?',
-]
-
-const sectionVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+const PIPELINE_STEPS = [
+  {
+    step: '01',
+    title: 'Query',
+    description: 'Your natural language question is parsed and expanded into optimized search queries across multiple indices.',
   },
-}
+  {
+    step: '02',
+    title: 'Retrieve',
+    description: 'Real-time web search across 8+ sources — news, research papers, documentation, and verified databases.',
+  },
+  {
+    step: '03',
+    title: 'Synthesize',
+    description: 'Multi-model AI cross-references sources, resolves conflicts, and constructs a coherent, cited answer.',
+  },
+  {
+    step: '04',
+    title: 'Cite',
+    description: 'Every claim is anchored to a source. Click any citation to verify — full transparency, zero hallucination.',
+  },
+]
 
 export default function AIDemoSection() {
   const [isVisible, setIsVisible] = useState(false)
-  const [displayedText, setDisplayedText] = useState('')
+  const [displayedCode, setDisplayedCode] = useState('')
   const [typingComplete, setTypingComplete] = useState(false)
   const sectionRef = useRef<HTMLDivElement>(null)
   const hasStarted = useRef(false)
@@ -84,7 +84,7 @@ export default function AIDemoSection() {
           setIsVisible(true)
         }
       },
-      { threshold: 0.25 }
+      { threshold: 0.2 }
     )
 
     observer.observe(element)
@@ -97,225 +97,197 @@ export default function AIDemoSection() {
 
     let currentIndex = 0
     const interval = setInterval(() => {
-      if (currentIndex < DEMO_ANSWER.length) {
-        // Reveal a chunk of characters for a more natural typing feel
-        const chunkSize = Math.floor(Math.random() * 3) + 1
-        const nextIndex = Math.min(currentIndex + chunkSize, DEMO_ANSWER.length)
-        setDisplayedText(DEMO_ANSWER.slice(0, nextIndex))
+      if (currentIndex < CODE_CONTENT.length) {
+        const chunkSize = Math.floor(Math.random() * 2) + 1
+        const nextIndex = Math.min(currentIndex + chunkSize, CODE_CONTENT.length)
+        setDisplayedCode(CODE_CONTENT.slice(0, nextIndex))
         currentIndex = nextIndex
       } else {
         setTypingComplete(true)
         clearInterval(interval)
       }
-    }, 18)
+    }, 16)
 
     return () => clearInterval(interval)
   }, [isVisible])
 
-  // Parse inline citations from the displayed text
-  const renderTextWithCitations = (text: string) => {
-    const parts = text.split(/(\[\d+\])/g)
-    return parts.map((part, i) => {
-      const citationMatch = part.match(/^\[(\d+)\]$/)
-      if (citationMatch) {
-        return (
-          <span
-            key={i}
-            className="inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-md text-[10px] font-bold bg-cyan-500/20 text-cyan-400 mx-0.5 align-middle"
-          >
-            {citationMatch[1]}
-          </span>
-        )
-      }
-      // Handle bold markdown
-      const boldParts = part.split(/(\*\*[^*]+\*\*)/g)
-      return boldParts.map((bp, j) => {
-        const boldMatch = bp.match(/^\*\*([^*]+)\*\*$/)
-        if (boldMatch) {
-          return (
-            <strong key={`${i}-${j}`} className="text-foreground font-semibold">
-              {boldMatch[1]}
-            </strong>
-          )
+  // Syntax-highlighted code rendering
+  const renderCode = (code: string) => {
+    return code.split('\n').map((line, i) => {
+      // Keywords
+      let rendered = line
+        .replace(/(const|await|false|true|return|let|var|function)/g, '<kw>$1</kw>')
+        .replace(/(\/\/.*)/g, '<cm>$1</cm>')
+        .replace(/(".*?")/g, '<str>$1</str>')
+        .replace(/(\.\w+)\(/g, '<fn>$1</fn>(')
+        .replace(/(nexus\.)/g, '<obj>$1</obj>')
+
+      // Parse custom tags into spans
+      const parts = rendered.split(/(<kw>|<\/kw>|<cm>|<\/cm>|<str>|<\/str>|<fn>|<\/fn>|<obj>|<\/obj>)/g)
+      const elements: React.ReactNode[] = []
+      let currentTag = ''
+      let buffer = ''
+      let keyIdx = 0
+
+      for (const part of parts) {
+        if (part.startsWith('<') && !part.startsWith('</')) {
+          if (buffer) {
+            elements.push(<span key={keyIdx++}>{buffer}</span>)
+            buffer = ''
+          }
+          currentTag = part.slice(1, -1)
+        } else if (part.startsWith('</')) {
+          const className =
+            currentTag === 'kw' ? 'text-[var(--accent-purple,#c084fc)]' :
+            currentTag === 'cm' ? 'text-[var(--stone)] italic' :
+            currentTag === 'str' ? 'text-[var(--accent-green)]' :
+            currentTag === 'fn' ? 'text-[var(--accent-blue)]' :
+            currentTag === 'obj' ? 'text-[var(--accent-yellow)]' :
+            ''
+          elements.push(<span key={keyIdx++} className={className}>{buffer}</span>)
+          buffer = ''
+          currentTag = ''
+        } else {
+          buffer += part
         }
-        return <span key={`${i}-${j}`}>{bp}</span>
-      })
+      }
+      if (buffer) {
+        elements.push(<span key={keyIdx++}>{buffer}</span>)
+      }
+
+      return (
+        <div key={i} className="min-h-[1.6em]">
+          {elements}
+        </div>
+      )
     })
   }
 
   return (
     <section
       ref={sectionRef}
-      className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden"
+      className="glow-blue"
+      style={{ paddingTop: 'var(--spacing-section)', paddingBottom: 'var(--spacing-section)' }}
     >
-      {/* Background accent */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(103,232,249,0.3) 0%, rgba(167,139,250,0.2) 50%, transparent 70%)',
-          filter: 'blur(100px)',
-        }}
-      />
-
-      <div className="max-w-5xl mx-auto relative z-10">
+      <div className="max-w-[1120px] mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div
-          className="text-center mb-14"
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
+          className="mb-16"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3">
-            See How It Works
+          <h2 className="display-xl mb-4">
+            See it in action
           </h2>
-          <div className="mx-auto w-32 h-1 rounded-full mb-4 animate-gradient" style={{ background: 'linear-gradient(90deg, #06b6d4, #8b5cf6, #06b6d4)', backgroundSize: '200% 100%' }} />
-          <p className="text-muted-foreground text-base sm:text-lg max-w-lg mx-auto">
-            From question to cited answer in seconds
+          <p className="body-md max-w-[520px]" style={{ color: 'var(--charcoal)' }}>
+            From natural language to cited answer. Our search pipeline retrieves,
+            synthesizes, and cites — in under two seconds.
           </p>
         </motion.div>
 
-        {/* Flow Badges */}
-        <motion.div
-          className="flex items-center justify-center gap-2 sm:gap-0 mb-14 flex-wrap"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {FLOW_STEPS.map((step, index) => (
-            <div key={step.label} className="flex items-center">
-              <div className="glass rounded-full px-3 sm:px-4 py-2 flex items-center gap-1.5 sm:gap-2">
-                <step.icon className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="text-xs sm:text-sm font-medium text-foreground/80">
-                  {step.label}
-                </span>
-              </div>
-              {index < FLOW_STEPS.length - 1 && (
-                <div className="hidden sm:block w-6 lg:w-10 h-px bg-gradient-to-r from-cyan-500/30 to-purple-500/30 mx-1 lg:mx-2" />
-              )}
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Main Demo Card */}
-        <motion.div
-          className="glass-strong rounded-2xl sm:rounded-3xl p-5 sm:p-8"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-            {/* Left: User Question */}
-            <div className="glass rounded-xl p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-full bg-cyan-500/15 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-cyan-400" />
+        {/* 2-up split: narrative left, code window right */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          {/* Left: Pipeline narrative */}
+          <motion.div
+            className="space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            {PIPELINE_STEPS.map((step, index) => (
+              <div key={step.step} className="flex gap-5">
+                <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: 'var(--surface-elevated)', border: '1px solid var(--hairline)' }}
+                >
+                  <span className="code-md text-[var(--accent-blue)]">{step.step}</span>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-foreground">You</span>
-                  <span className="text-xs text-muted-foreground ml-2">Just now</span>
+                  <h3 className="heading-sm mb-1.5">{step.title}</h3>
+                  <p className="body-sm">{step.description}</p>
                 </div>
               </div>
-              <p className="text-base sm:text-lg text-foreground leading-relaxed">
-                What are the best AI SaaS ideas for 2026?
-              </p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground/50 mt-auto">
-                <Globe className="h-3 w-3" />
-                <span>Searching across 8 sources...</span>
-              </div>
+            ))}
+
+            <div className="pt-4">
+              <button className="btn-primary gap-2">
+                Try it free
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
+          </motion.div>
 
-            {/* Right: AI Response */}
-            <div className="glass rounded-xl p-5 flex flex-col gap-4 min-h-0">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-full bg-purple-500/15 flex items-center justify-center shrink-0">
-                  <Bot className="h-4 w-4 text-purple-400" />
+          {/* Right: Code window */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <div className="code-window">
+              {/* Traffic light dots + tab strip */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="traffic-light-red" />
+                  <div className="traffic-light-yellow" />
+                  <div className="traffic-light-green" />
                 </div>
-                <div>
-                  <span className="text-sm font-medium text-foreground">Nexus AI</span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {typingComplete ? 'Complete' : 'Analyzing...'}
-                  </span>
+                <div className="flex items-center gap-1">
+                  <span className="code-tab code-tab-active">search.ts</span>
+                  <span className="code-tab">response.json</span>
                 </div>
               </div>
 
-              {/* Typing response */}
-              <div className="text-sm sm:text-base text-foreground/85 leading-relaxed flex-1 overflow-y-auto max-h-80 scrollbar-thin">
-                {renderTextWithCitations(displayedText)}
-                {!typingComplete && isVisible && (
-                  <span className="inline-block w-0.5 h-4 bg-cyan-400 animate-blink ml-0.5 align-middle" />
+              {/* Code content with typing animation */}
+              <div className="code-md overflow-x-auto">
+                {isVisible && (
+                  <pre className="whitespace-pre">
+                    {renderCode(displayedCode)}
+                    {!typingComplete && (
+                      <span className="inline-block w-[2px] h-[16px] bg-[var(--accent-blue)] animate-blink align-middle ml-[1px]" />
+                    )}
+                  </pre>
+                )}
+                {!isVisible && (
+                  <pre className="whitespace-pre text-[var(--stone)]">
+                    {'// Loading...'}
+                  </pre>
                 )}
               </div>
-
-              {/* Source Cards */}
-              {typingComplete && (
-                <motion.div
-                  className="space-y-2 mt-3"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-                    Sources
-                  </span>
-                  <div className="space-y-1.5">
-                    {DEMO_SOURCES.map((source, i) => (
-                      <div
-                        key={i}
-                        className="glass rounded-lg p-2.5 flex items-start gap-2 group hover:bg-white/[0.03] transition-colors"
-                      >
-                        <div className="flex items-center justify-center h-4 w-4 rounded bg-cyan-500/20 text-[9px] font-bold text-cyan-400 shrink-0 mt-0.5">
-                          {i + 1}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-medium text-foreground truncate">
-                              {source.title}
-                            </span>
-                            <ExternalLink className="h-2.5 w-2.5 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                          <span className="text-[10px] text-cyan-400/60 truncate block">
-                            {source.url}
-                          </span>
-                          <p className="text-[10px] text-muted-foreground/50 line-clamp-1 mt-0.5">
-                            {source.snippet}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Follow-up Questions */}
-              {typingComplete && (
-                <motion.div
-                  className="mt-3"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-                    Follow-up
-                  </span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {DEMO_FOLLOWUPS.map((question) => (
-                      <span
-                        key={question}
-                        className="glass rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors cursor-pointer"
-                      >
-                        {question}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
             </div>
-          </div>
-        </motion.div>
+
+            {/* Source citations — appear after typing completes */}
+            {typingComplete && (
+              <motion.div
+                className="mt-4 space-y-2"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <span className="body-sm" style={{ color: 'var(--stone)', fontSize: '12px', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  Sources
+                </span>
+                <div className="space-y-1.5">
+                  {DEMO_SOURCES.map((source, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 rounded-lg p-3 transition-colors"
+                      style={{ background: 'var(--surface-card)', border: '1px solid var(--hairline)' }}
+                    >
+                      <span className="citation-chip shrink-0 mt-0.5">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="body-sm font-medium" style={{ color: 'var(--ink)' }}>{source.title}</div>
+                        <div className="body-sm" style={{ color: 'var(--accent-blue)', fontSize: '12px' }}>{source.url}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
       </div>
     </section>
   )

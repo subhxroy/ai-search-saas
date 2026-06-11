@@ -1,21 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Newsreader as Domaine Display substitute — editorial serif with similar character
+const serifFont = Newsreader({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500"],
+  style: ["normal"],
 });
 
 export const metadata: Metadata = {
-  title: "Nexus AI - Where Knowledge Begins",
-  description: "AI-powered search engine with sources, citations, and follow-up suggestions. Ask anything and get answers from the web.",
+  title: "Nexus AI — Search for developers",
+  description:
+    "AI-powered search engine with real-time citations. Ask anything, get verified answers from across the web.",
   keywords: ["AI search", "perplexity", "research", "citations", "web search"],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
@@ -28,9 +40,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className="dark"
+    >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${geistMono.variable} ${serifFont.variable} antialiased`}
+        style={{ backgroundColor: "#000000", color: "#fcfdff" }}
       >
         {children}
         <Toaster />

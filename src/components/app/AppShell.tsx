@@ -5,9 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore, type AppPage } from '@/store/app-store'
 import {
   Menu,
-  Sparkles,
-  Sun,
-  Moon,
   Search,
   LayoutDashboard,
   MessageSquarePlus,
@@ -28,14 +25,8 @@ import {
   Key,
   Zap,
   ChevronRight,
-  X,
   BarChart3,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,18 +98,30 @@ const mobileNavItems: { label: string; page: AppPage; icon: React.ElementType }[
 ]
 
 /* ------------------------------------------------------------------ */
-/*  Page renderer placeholder for pages not yet built                  */
+/*  Page renderer placeholder                                          */
 /* ------------------------------------------------------------------ */
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
-      <div className="text-center space-y-3">
-        <div className="h-12 w-12 rounded-2xl glass mx-auto flex items-center justify-center">
-          <Sparkles className="h-6 w-6 text-cyan-400" />
+      <div className="text-center space-y-4">
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '12px',
+            background: 'var(--surface-card)',
+            border: '1px solid var(--hairline-strong)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto',
+          }}
+        >
+          <Search style={{ width: 24, height: 24, color: 'var(--ash)' }} />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-        <p className="text-sm text-muted-foreground">Coming soon</p>
+        <h2 className="heading-md">{title}</h2>
+        <p className="body-sm" style={{ color: 'var(--stone)' }}>Coming soon</p>
       </div>
     </div>
   )
@@ -126,53 +129,32 @@ function PlaceholderPage({ title }: { title: string }) {
 
 function renderPage(page: AppPage) {
   switch (page) {
-    case 'onboarding':
-      return <OnboardingPage />
-    case 'dashboard':
-      return <DashboardPage />
-    case 'chat':
-      return <ChatPage />
-    case 'research':
-      return <ResearchPage />
-    case 'history':
-      return <HistoryPage />
-    case 'collections':
-      return <CollectionsPage />
-    case 'shared':
-      return <SharedPage />
-    case 'library':
-      return <LibraryPage />
-    case 'workspace':
-      return <WorkspacePage />
-    case 'admin':
-      return <AdminPage />
-    case 'profile':
-      return <ProfilePage />
-    case 'settings':
-      return <SettingsPage />
-    case 'billing':
-      return <BillingPage />
-    case 'api-keys':
-      return <ApiKeysPage />
-    case 'analytics':
-      return <AnalyticsPage />
-    case 'docs':
-      return <DocsPage />
-    case 'blog':
-      return <BlogPage />
-    case 'support':
-      return <SupportPage />
-    case 'legal':
-      return <LegalPage />
-    case 'error':
-      return <ErrorPage />
-    default:
-      return <PlaceholderPage title="Page" />
+    case 'onboarding': return <OnboardingPage />
+    case 'dashboard': return <DashboardPage />
+    case 'chat': return <ChatPage />
+    case 'research': return <ResearchPage />
+    case 'history': return <HistoryPage />
+    case 'collections': return <CollectionsPage />
+    case 'shared': return <SharedPage />
+    case 'library': return <LibraryPage />
+    case 'workspace': return <WorkspacePage />
+    case 'admin': return <AdminPage />
+    case 'profile': return <ProfilePage />
+    case 'settings': return <SettingsPage />
+    case 'billing': return <BillingPage />
+    case 'api-keys': return <ApiKeysPage />
+    case 'analytics': return <AnalyticsPage />
+    case 'docs': return <DocsPage />
+    case 'blog': return <BlogPage />
+    case 'support': return <SupportPage />
+    case 'legal': return <LegalPage />
+    case 'error': return <ErrorPage />
+    default: return <PlaceholderPage title="Page" />
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  AppShell component                                                 */
+/*  AppShell component — Resend editorial style                        */
 /* ------------------------------------------------------------------ */
 
 export default function AppShell() {
@@ -182,17 +164,11 @@ export default function AppShell() {
     currentUser,
     sidebarOpen,
     setSidebarOpen,
-    theme,
-    setTheme,
     logout,
   } = useAppStore()
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    setSidebarOpen(false)
-  }, [page, setSidebarOpen])
+  useEffect(() => { setSidebarOpen(false) }, [page, setSidebarOpen])
 
-  // Keyboard shortcut: Cmd+K to focus search (future)
   const handleSearchShortcut = useCallback(
     (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -211,106 +187,157 @@ export default function AppShell() {
   const isAdmin = currentUser?.role === 'admin'
   const isFreePlan = currentUser?.plan === 'free'
   const initials = currentUser?.name
-    ? currentUser.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
+    ? currentUser.name.split(' ').map((n) => n[0]).join('').toUpperCase()
     : 'U'
 
   const planLabel =
-    currentUser?.plan === 'pro'
-      ? 'Pro'
-      : currentUser?.plan === 'enterprise'
-        ? 'Enterprise'
-        : 'Free'
+    currentUser?.plan === 'pro' ? 'Pro'
+      : currentUser?.plan === 'enterprise' ? 'Enterprise'
+      : 'Free'
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#000000', color: '#fcfdff' }}>
       {/* ============ TOP NAVBAR ============ */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
+        style={{
+          height: 56,
+          backgroundColor: '#000000',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
         {/* Left section */}
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 lg:hidden"
+          <button
+            className="lg:hidden flex items-center justify-center"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '8px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--charcoal)',
+            }}
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Toggle sidebar"
           >
-            <Menu className="h-5 w-5" />
-          </Button>
+            <Menu style={{ width: 20, height: 20 }} />
+          </button>
 
-          {/* Logo */}
+          {/* Logo — Resend style monochrome */}
           <button
             onClick={() => navigate('dashboard')}
-            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-white/10">
-              <Sparkles className="h-4 w-4 text-cyan-400" />
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Search style={{ width: 14, height: 14, color: '#fcfdff' }} />
             </div>
-            <span className="text-base font-semibold tracking-tight hidden sm:inline">
+            <span
+              className="hidden sm:inline"
+              style={{
+                fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#fcfdff',
+                letterSpacing: '-0.01em',
+              }}
+            >
               Nexus AI
             </span>
           </button>
         </div>
 
         {/* Right section */}
-        <div className="flex items-center gap-1.5">
-          {/* Search shortcut indicator */}
+        <div className="flex items-center gap-2">
+          {/* Search shortcut */}
           <button
             onClick={() => navigate('dashboard')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 cursor-pointer"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              background: 'var(--surface-card)',
+              border: '1px solid var(--hairline)',
+              color: 'var(--stone)',
+              fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              fontSize: 12,
+            }}
           >
-            <Search className="h-3.5 w-3.5" />
+            <Search style={{ width: 14, height: 14 }} />
             <span>⌘K</span>
           </button>
 
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </Button>
-
-          {/* User avatar dropdown */}
+          {/* User dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-accent transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Avatar className="h-7 w-7">
-                  {currentUser?.avatar && (
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                  )}
-                  <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-cyan-500/20 to-purple-500/20 ring-1 ring-white/10">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium leading-none">
+              <button
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 8px',
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-card)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '9999px',
+                    background: 'var(--surface-elevated)',
+                    border: '1px solid var(--hairline)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: 'var(--ash)',
+                  }}
+                >
+                  {initials}
+                </div>
+                <div className="hidden md:flex items-center gap-2">
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>
                     {currentUser?.name || 'User'}
                   </span>
+                  <span
+                    className="badge-pill"
+                    style={{ fontSize: 10, padding: '2px 8px', color: 'var(--accent-blue)' }}
+                  >
+                    {planLabel}
+                  </span>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className="hidden md:inline-flex text-[10px] px-1.5 py-0 h-4 font-semibold bg-gradient-to-r from-cyan-500/15 to-purple-500/15 text-cyan-400 border-cyan-500/20"
-                >
-                  {planLabel}
-                </Badge>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{currentUser?.name || 'User'}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p style={{ fontSize: 12, color: 'var(--ash)' }}>
                     {currentUser?.email || 'user@nexus.ai'}
                   </p>
                 </div>
@@ -318,36 +345,28 @@ export default function AppShell() {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => navigate('profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
+                  <User className="mr-2 h-4 w-4" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('billing')}>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Billing
+                  <CreditCard className="mr-2 h-4 w-4" /> Billing
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('api-keys')}>
-                  <Key className="mr-2 h-4 w-4" />
-                  API Keys
+                  <Key className="mr-2 h-4 w-4" /> API Keys
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="text-destructive focus:text-destructive"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
+              <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" /> Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </header>
 
-      {/* ============ SIDEBAR BACKDROP (mobile) ============ */}
+      {/* ============ SIDEBAR BACKDROP ============ */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -355,7 +374,8 @@ export default function AppShell() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 lg:hidden"
+            style={{ background: 'rgba(0,0,0,0.7)' }}
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -368,25 +388,18 @@ export default function AppShell() {
           initial={{ x: -256 }}
           animate={{ x: sidebarOpen ? 0 : -256 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-14 left-0 bottom-0 z-40 w-64 bg-background border-r border-border/50 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
+          className="fixed top-14 left-0 bottom-0 z-40 w-64 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
+          style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
         >
-          <SidebarContent
-            page={page}
-            navigate={navigate}
-            isAdmin={isAdmin}
-            isFreePlan={isFreePlan}
-            onClose={() => setSidebarOpen(false)}
-          />
+          <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} onClose={() => setSidebarOpen(false)} />
         </motion.aside>
 
         {/* Desktop sidebar */}
-        <aside className="hidden lg:flex fixed top-14 left-0 bottom-0 z-30 w-64 bg-background border-r border-border/50 flex-col overflow-y-auto scrollbar-thin">
-          <SidebarContent
-            page={page}
-            navigate={navigate}
-            isAdmin={isAdmin}
-            isFreePlan={isFreePlan}
-          />
+        <aside
+          className="hidden lg:flex fixed top-14 left-0 bottom-0 z-30 w-64 flex-col overflow-y-auto scrollbar-thin"
+          style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} />
         </aside>
       </AnimatePresence>
 
@@ -396,7 +409,13 @@ export default function AppShell() {
       </main>
 
       {/* ============ MOBILE BOTTOM NAV ============ */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-border/50 bg-background/90 backdrop-blur-xl safe-area-bottom">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        style={{
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: '#000000',
+        }}
+      >
         <div className="flex items-center justify-around h-14 px-2">
           {mobileNavItems.map((item) => {
             const isActive = page === item.page
@@ -404,14 +423,19 @@ export default function AppShell() {
               <button
                 key={item.page}
                 onClick={() => navigate(item.page)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors ${
-                  isActive
-                    ? 'text-cyan-400'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
+                style={{
+                  color: isActive ? '#fcfdff' : 'var(--stone)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                }}
               >
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <item.icon style={{ width: 20, height: 20 }} />
+                <span style={{ fontSize: 10, fontWeight: 500, fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+                  {item.label}
+                </span>
               </button>
             )
           })}
@@ -422,7 +446,7 @@ export default function AppShell() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Sidebar inner content (shared between mobile & desktop)            */
+/*  Sidebar inner content — Resend editorial style                     */
 /* ------------------------------------------------------------------ */
 
 interface SidebarContentProps {
@@ -450,22 +474,45 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
             <div key={item.page}>
               <button
                 onClick={() => handleNav(item.page)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-accent text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  fontFamily: 'var(--font-inter), system-ui, sans-serif',
+                  background: isActive ? 'var(--surface-card)' : 'transparent',
+                  color: isActive ? '#fcfdff' : 'var(--ash)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'var(--surface-card)'
+                    e.currentTarget.style.color = 'var(--ink)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = 'var(--ash)'
+                  }
+                }}
               >
-                <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-cyan-400' : ''}`} />
+                <item.icon style={{ width: 16, height: 16, shrink: 0, color: isActive ? 'var(--accent-blue)' : 'inherit' }} />
                 <span>{item.label}</span>
                 {item.page === 'research' && (
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-cyan-500/15 to-purple-500/15 text-cyan-400 font-semibold">
+                  <span className="badge-pill ml-auto" style={{ fontSize: 10, padding: '2px 8px', color: 'var(--accent-green)' }}>
                     NEW
                   </span>
                 )}
               </button>
               {item.separatorAfter && (
-                <Separator className="my-2 bg-border/50" />
+                <div style={{ height: 1, background: 'var(--hairline)', margin: '8px 0' }} />
               )}
             </div>
           )
@@ -475,23 +522,38 @@ function SidebarContent({ page, navigate, isAdmin, isFreePlan, onClose }: Sideba
       {/* Upgrade card */}
       {isFreePlan && (
         <div className="p-3">
-          <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-cyan-500/10 via-purple-500/10 to-cyan-500/5 border border-cyan-500/10">
-            {/* Decorative glow */}
-            <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-cyan-500/10 blur-2xl" />
-            <div className="relative space-y-2">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-cyan-400" />
-                <span className="text-sm font-semibold">Upgrade to Pro</span>
+          <div
+            style={{
+              borderRadius: '12px',
+              padding: 16,
+              background: 'var(--surface-card)',
+              border: '1px solid var(--hairline-strong)',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Zap style={{ width: 16, height: 16, color: 'var(--accent-green)' }} />
+                <span style={{ fontSize: 14, fontWeight: 500, color: '#fcfdff' }}>Upgrade to Pro</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p style={{ fontSize: 12, color: 'var(--ash)', lineHeight: 1.5 }}>
                 Unlimited searches, deep research, and priority access.
               </p>
               <button
                 onClick={() => handleNav('billing')}
-                className="flex items-center gap-1 text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--accent-blue)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
                 Upgrade now
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight style={{ width: 12, height: 12 }} />
               </button>
             </div>
           </div>

@@ -1,35 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Search, Sparkles, ArrowRight, Loader2 } from 'lucide-react'
-import { useChatStore } from '@/store/chat-store'
-
-const SUGGESTIONS = [
-  {
-    icon: '🔬',
-    title: 'Latest breakthroughs',
-    subtitle: 'in quantum computing',
-    query: 'What are the latest breakthroughs in quantum computing?',
-  },
-  {
-    icon: '📈',
-    title: 'AI SaaS trends',
-    subtitle: 'shaping 2026',
-    query: 'What AI SaaS trends are shaping 2026?',
-  },
-  {
-    icon: '🌍',
-    title: 'Climate tech solutions',
-    subtitle: 'making real impact',
-    query: 'What climate tech solutions are making real impact?',
-  },
-  {
-    icon: '💊',
-    title: 'Healthcare AI innovations',
-    subtitle: 'transforming patient care',
-    query: 'How is AI transforming healthcare and patient care?',
-  },
-]
+import { Search, ArrowRight, Loader2 } from 'lucide-react'
+import { useAppStore } from '@/store/app-store'
 
 interface SearchInputProps {
   showSuggestions?: boolean
@@ -43,7 +16,7 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
   const {
     isLoading,
     addMessage,
-    setView,
+    navigate,
     setIsLoading,
     setCurrentSources,
     setCurrentFollowUps,
@@ -52,7 +25,7 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
     updateLastAssistantMessage,
     finalizeLastAssistantMessage,
     clearMessages,
-  } = useChatStore()
+  } = useAppStore()
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -64,13 +37,12 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
     setInput('')
 
     if (isNewSearch) {
-      // Start fresh: clear old messages and conversation
       clearMessages()
       setConversationId(null)
     }
 
     addMessage({ role: 'user', content: query.trim() })
-    setView('chat')
+    navigate('chat')
     setIsLoading(true)
     setCurrentSources([])
     setCurrentFollowUps([])
@@ -89,9 +61,7 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
       })
 
       if (!res.ok) {
-        updateLastAssistantMessage(
-          'Sorry, something went wrong. Please try again.'
-        )
+        updateLastAssistantMessage('Sorry, something went wrong. Please try again.')
         finalizeLastAssistantMessage([], [])
         setIsLoading(false)
         return
@@ -137,13 +107,11 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
           }
         }
       }
-      // Finalize the message - clear streaming state and attach sources/followups
-      const state = useChatStore.getState()
+      // Finalize the message
+      const state = useAppStore.getState()
       finalizeLastAssistantMessage(state.currentSources, state.currentFollowUps)
     } catch {
-      updateLastAssistantMessage(
-        'Network error. Please check your connection and try again.'
-      )
+      updateLastAssistantMessage('Network error. Please check your connection and try again.')
       finalizeLastAssistantMessage([], [])
     } finally {
       setIsLoading(false)
@@ -158,8 +126,19 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
   return (
     <div className="w-full max-w-2xl mx-auto">
       <form onSubmit={onFormSubmit} className="relative">
-        <div className="relative flex items-center">
-          <Search className="absolute left-4 h-5 w-5 text-muted-foreground" />
+        <div
+          className="relative flex items-center"
+          style={{
+            background: 'var(--surface-card)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            borderRadius: '8px',
+            height: 48,
+          }}
+        >
+          <Search
+            className="absolute left-4"
+            style={{ width: 18, height: 18, color: 'var(--ash)' }}
+          />
           <input
             ref={inputRef}
             type="text"
@@ -167,46 +146,37 @@ export default function SearchInput({ showSuggestions = false, isNewSearch = tru
             onChange={(e) => setInput(e.target.value)}
             placeholder={isNewSearch ? "Ask anything..." : "Ask a follow-up..."}
             disabled={isLoading}
-            className="w-full h-14 pl-12 pr-14 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-base disabled:opacity-50"
+            className="w-full pl-12 pr-14 bg-transparent border-none outline-none text-base disabled:opacity-50"
+            style={{
+              color: 'var(--ink)',
+              fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              fontSize: 14,
+              lineHeight: 1.43,
+            }}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="absolute right-2 flex items-center justify-center"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '8px',
+              background: input.trim() ? 'var(--primary)' : 'var(--surface-elevated)',
+              color: input.trim() ? 'var(--primary-on)' : 'var(--stone)',
+              border: 'none',
+              cursor: input.trim() ? 'pointer' : 'not-allowed',
+              transition: 'background 0.15s ease',
+            }}
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />
             ) : (
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight style={{ width: 16, height: 16 }} />
             )}
           </button>
         </div>
       </form>
-
-      {/* Suggestions */}
-      {showSuggestions && (
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {SUGGESTIONS.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => handleSubmit(s.query)}
-              disabled={isLoading}
-              className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card hover:bg-accent transition-colors text-left group disabled:opacity-50"
-            >
-              <span className="text-xl shrink-0">{s.icon}</span>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-foreground truncate">
-                  {s.title}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {s.subtitle}
-                </div>
-              </div>
-              <Sparkles className="h-3.5 w-3.5 text-muted-foreground ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

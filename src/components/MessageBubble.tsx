@@ -2,10 +2,10 @@
 
 import ReactMarkdown from 'react-markdown'
 import { ExternalLink } from 'lucide-react'
-import type { Source } from '@/store/chat-store'
+import type { Source } from '@/store/app-store'
 
 interface MessageBubbleProps {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   content: string
   sources?: Source[]
   isStreaming?: boolean
@@ -20,7 +20,19 @@ export default function MessageBubble({
   if (role === 'user') {
     return (
       <div className="flex justify-end mb-6">
-        <div className="max-w-[80%] px-5 py-3 rounded-2xl rounded-br-md bg-primary text-primary-foreground text-[15px] leading-relaxed">
+        <div
+          className="max-w-[80%] px-5 py-3"
+          style={{
+            background: 'var(--surface-card)',
+            border: '1px solid var(--hairline-strong)',
+            borderRadius: '12px',
+            borderBottomRightRadius: '4px',
+            color: 'var(--ink)',
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            fontSize: 15,
+            lineHeight: 1.5,
+          }}
+        >
           {content}
         </div>
       </div>
@@ -29,7 +41,7 @@ export default function MessageBubble({
 
   return (
     <div className="mb-6 max-w-full">
-      <div className="prose prose-sm dark:prose-invert max-w-none text-[15px] leading-relaxed">
+      <div className="prose prose-sm dark:prose-invert max-w-none" style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--body)' }}>
         {content ? (
           <ReactMarkdown
             components={{
@@ -38,25 +50,30 @@ export default function MessageBubble({
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary underline underline-offset-2 hover:text-primary/80 inline-flex items-center gap-1"
+                  className="inline-flex items-center gap-1"
+                  style={{ color: 'var(--accent-blue)', textDecoration: 'underline', textUnderlineOffset: 2 }}
                 >
                   {children}
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink style={{ width: 12, height: 12 }} />
                 </a>
               ),
               p: ({ children }) => (
                 <p className="mb-3 last:mb-0">{children}</p>
               ),
               h1: ({ children }) => (
-                <h1 className="text-2xl font-bold mt-6 mb-3 first:mt-0">
+                <h1 className="text-2xl font-bold mt-6 mb-3 first:mt-0" style={{ color: 'var(--ink)' }}>
                   {children}
                 </h1>
               ),
               h2: ({ children }) => (
-                <h2 className="text-xl font-bold mt-5 mb-2">{children}</h2>
+                <h2 className="text-xl font-bold mt-5 mb-2" style={{ color: 'var(--ink)' }}>
+                  {children}
+                </h2>
               ),
               h3: ({ children }) => (
-                <h3 className="text-lg font-semibold mt-4 mb-2">{children}</h3>
+                <h3 className="text-lg font-semibold mt-4 mb-2" style={{ color: 'var(--ink)' }}>
+                  {children}
+                </h3>
               ),
               ul: ({ children }) => (
                 <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>
@@ -68,7 +85,7 @@ export default function MessageBubble({
                 <li className="leading-relaxed">{children}</li>
               ),
               blockquote: ({ children }) => (
-                <blockquote className="border-l-3 border-primary/30 pl-4 italic text-muted-foreground">
+                <blockquote style={{ borderLeft: '3px solid var(--hairline-strong)', paddingLeft: 16, fontStyle: 'italic', color: 'var(--charcoal)' }}>
                   {children}
                 </blockquote>
               ),
@@ -76,19 +93,37 @@ export default function MessageBubble({
                 const isInline = !className
                 if (isInline) {
                   return (
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
+                    <code
+                      style={{
+                        background: 'var(--surface-card)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: 13,
+                        fontFamily: 'var(--font-geist-mono), monospace',
+                      }}
+                    >
                       {children}
                     </code>
                   )
                 }
                 return (
-                  <code className={`${className} block bg-muted p-3 rounded-lg text-sm font-mono overflow-x-auto`}>
+                  <code
+                    className={`${className} block overflow-x-auto`}
+                    style={{
+                      background: 'var(--surface-deep)',
+                      padding: 12,
+                      borderRadius: '8px',
+                      fontSize: 13,
+                      fontFamily: 'var(--font-geist-mono), monospace',
+                      border: '1px solid var(--hairline)',
+                    }}
+                  >
                     {children}
                   </code>
                 )
               },
               strong: ({ children }) => (
-                <strong className="font-semibold text-foreground">
+                <strong className="font-semibold" style={{ color: 'var(--ink)' }}>
                   {children}
                 </strong>
               ),
@@ -97,13 +132,33 @@ export default function MessageBubble({
             {content}
           </ReactMarkdown>
         ) : isStreaming ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2" style={{ color: 'var(--ash)' }}>
             <div className="flex gap-1">
-              <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce" />
+              <span
+                className="rounded-full animate-bounce"
+                style={{
+                  width: 6, height: 6,
+                  background: 'rgba(252,253,255,0.3)',
+                  animationDelay: '-0.3s',
+                }}
+              />
+              <span
+                className="rounded-full animate-bounce"
+                style={{
+                  width: 6, height: 6,
+                  background: 'rgba(252,253,255,0.3)',
+                  animationDelay: '-0.15s',
+                }}
+              />
+              <span
+                className="rounded-full animate-bounce"
+                style={{
+                  width: 6, height: 6,
+                  background: 'rgba(252,253,255,0.3)',
+                }}
+              />
             </div>
-            <span className="text-sm">Searching and analyzing sources...</span>
+            <span style={{ fontSize: 14 }}>Searching and analyzing sources...</span>
           </div>
         ) : null}
       </div>
@@ -117,11 +172,14 @@ export default function MessageBubble({
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted hover:bg-accent text-xs text-muted-foreground hover:text-foreground transition-colors max-w-[180px]"
+              className="citation-chip"
+              style={{ gap: 4, maxWidth: 180, textDecoration: 'none' }}
               title={source.title}
             >
-              <span className="font-medium text-primary">[{i + 1}]</span>
-              <span className="truncate">{source.host_name || source.title}</span>
+              <span style={{ fontWeight: 600 }}>[{i + 1}]</span>
+              <span className="truncate" style={{ color: 'var(--charcoal)', fontSize: 11 }}>
+                {source.host_name || source.title}
+              </span>
             </a>
           ))}
         </div>
@@ -129,7 +187,14 @@ export default function MessageBubble({
 
       {/* Cursor animation when streaming */}
       {isStreaming && content && (
-        <span className="inline-block w-0.5 h-4 bg-foreground/70 animate-pulse ml-0.5 align-text-bottom" />
+        <span
+          className="inline-block animate-blink ml-0.5 align-text-bottom"
+          style={{
+            width: 2,
+            height: 16,
+            background: 'var(--accent-blue)',
+          }}
+        />
       )}
     </div>
   )
