@@ -382,26 +382,30 @@ export default function AppShell() {
       </AnimatePresence>
 
       {/* ============ LEFT SIDEBAR ============ */}
+      {/* Mobile sidebar */}
       <AnimatePresence>
-        {/* Mobile sidebar */}
-        <motion.aside
-          initial={{ x: -256 }}
-          animate={{ x: sidebarOpen ? 0 : -256 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-14 left-0 bottom-0 z-40 w-64 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
-          style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} onClose={() => setSidebarOpen(false)} />
-        </motion.aside>
-
-        {/* Desktop sidebar */}
-        <aside
-          className="hidden lg:flex fixed top-14 left-0 bottom-0 z-30 w-64 flex-col overflow-y-auto scrollbar-thin"
-          style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} />
-        </aside>
+        {sidebarOpen && (
+          <motion.aside
+            key="mobile-sidebar"
+            initial={{ x: -256 }}
+            animate={{ x: 0 }}
+            exit={{ x: -256 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed top-14 left-0 bottom-0 z-40 w-64 flex flex-col lg:hidden overflow-y-auto scrollbar-thin"
+            style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} onClose={() => setSidebarOpen(false)} />
+          </motion.aside>
+        )}
       </AnimatePresence>
+
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden lg:flex fixed top-14 left-0 bottom-0 z-30 w-64 flex-col overflow-y-auto scrollbar-thin"
+        style={{ background: '#06060a', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <SidebarContent page={page} navigate={navigate} isAdmin={isAdmin} isFreePlan={isFreePlan} />
+      </aside>
 
       {/* ============ MAIN CONTENT ============ */}
       <main className="flex-1 pt-14 lg:pl-64 pb-16 lg:pb-0">
