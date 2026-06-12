@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/store/app-store'
 import {
@@ -88,23 +88,17 @@ const TABS: TabDef[] = [
 /*  Mock data                                                          */
 /* ------------------------------------------------------------------ */
 
-interface MockUser {
-  id: string
-  name: string
-  email: string
-  plan: string
-  role: string
-  joined: string
-  avatar: string
+function formatJoinedDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  } catch {
+    return dateStr
+  }
 }
-
-const MOCK_USERS: MockUser[] = [
-  { id: '1', name: 'Sarah Chen', email: 'sarah@acme.co', plan: 'Pro', role: 'user', joined: 'Jan 15, 2026', avatar: 'SC' },
-  { id: '2', name: 'Marcus Johnson', email: 'marcus@dev.io', plan: 'Enterprise', role: 'admin', joined: 'Dec 3, 2025', avatar: 'MJ' },
-  { id: '3', name: 'Aiko Tanaka', email: 'aiko@research.jp', plan: 'Free', role: 'user', joined: 'Feb 28, 2026', avatar: 'AT' },
-  { id: '4', name: 'Raj Patel', email: 'raj@startup.in', plan: 'Pro', role: 'user', joined: 'Mar 10, 2026', avatar: 'RP' },
-  { id: '5', name: 'Elena Volkov', email: 'elena@corp.ru', plan: 'Free', role: 'user', joined: 'Apr 5, 2026', avatar: 'EV' },
-]
 
 interface FAQItem {
   id: string
@@ -189,6 +183,112 @@ export default function AdminPage() {
   const [features, setFeatures] = useState(PLAN_FEATURES)
   const [cacheCleared, setCacheCleared] = useState(false)
 
+  const [users, setUsers] = useState<any[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalSearches: 0,
+    totalConversations: 0,
+    activeToday: 0,
+  })
+  const [loadingStats, setLoadingStats] = useState(true)
+
+  // Fetch users list
+  const fetchUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const res = await fetch('/api/admin/users')
+      if (res.ok) {
+        const data = await res.json()
+        setUsers(data.users || [])
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  // Fetch system stats
+  const fetchStats = async () => {
+    setLoadingStats(true)
+    try {
+      const res = await fetch('/api/admin/stats')
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  // Fetch data depending on active tab
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      if (activeTab === 'users') {
+        fetchUsers()
+      } else if (activeTab === 'system') {
+        fetchStats()
+      }
+    }
+  }, [activeTab, currentUser])
+
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: newRole }),
+      })
+      if (res.ok) {
+        fetchUsers()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update role')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleUpdatePlan = async (userId: string, newPlan: string) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, plan: newPlan }),
+      })
+      if (res.ok) {
+        fetchUsers()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update plan')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return
+    try {
+      const res = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        fetchUsers()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to delete user')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   // Admin guard
   if (currentUser?.role !== 'admin') {
     return (
@@ -210,10 +310,10 @@ export default function AdminPage() {
     )
   }
 
-  const filteredUsers = MOCK_USERS.filter(
+  const filteredUsers = users.filter(
     (u) =>
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase())
+      (u.name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(userSearch.toLowerCase())
   )
 
   const toggleFeature = (featureName: string, plan: 'free' | 'pro' | 'enterprise') => {
@@ -286,7 +386,7 @@ export default function AdminPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
                   <Users className="h-4 w-4 text-cyan-400" />
-                  <span className="text-sm font-medium">{MOCK_USERS.length} Users</span>
+                  <span className="text-sm font-medium">{users.length} Users</span>
                 </div>
               </div>
               <div className="relative w-full sm:w-72">
@@ -320,19 +420,19 @@ export default function AdminPage() {
                         <TableCell>
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-white/10 text-xs font-medium">
-                              {user.avatar}
+                              {user.name ? user.name.split(' ').map((n: any) => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
                             </div>
-                            <span className="text-sm font-medium">{user.name}</span>
+                            <span className="text-sm font-medium">{user.name || 'Unnamed User'}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
                         <TableCell>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] font-semibold ${
-                              user.plan === 'Enterprise'
+                            className={`text-[10px] font-semibold uppercase ${
+                              user.plan === 'enterprise'
                                 ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                                : user.plan === 'Pro'
+                                : user.plan === 'pro'
                                   ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
                                   : 'bg-white/5 text-muted-foreground border-white/10'
                             }`}
@@ -343,7 +443,7 @@ export default function AdminPage() {
                         <TableCell>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] font-semibold ${
+                            className={`text-[10px] font-semibold uppercase ${
                               user.role === 'admin'
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                 : 'bg-white/5 text-muted-foreground border-white/10'
@@ -352,7 +452,7 @@ export default function AdminPage() {
                             {user.role}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{user.joined}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{formatJoinedDate(user.createdAt)}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -361,18 +461,28 @@ export default function AdminPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem className="gap-2">
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => handleUpdateRole(user.id, user.role === 'admin' ? 'user' : 'admin')}
+                              >
                                 <Pencil className="h-3.5 w-3.5" />
-                                Edit Role
+                                {user.role === 'admin' ? 'Make User' : 'Make Admin'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2">
-                                <Ban className="h-3.5 w-3.5" />
-                                Suspend
+                              <DropdownMenuItem
+                                className="gap-2"
+                                onClick={() => handleUpdatePlan(user.id, user.plan === 'free' ? 'pro' : user.plan === 'pro' ? 'enterprise' : 'free')}
+                              >
+                                <CreditCard className="h-3.5 w-3.5" />
+                                Cycle Plan ({user.plan})
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem variant="destructive" className="gap-2">
+                              <DropdownMenuItem
+                                variant="destructive"
+                                className="gap-2"
+                                onClick={() => handleDeleteUser(user.id)}
+                              >
                                 <Trash2 className="h-3.5 w-3.5" />
-                                Delete
+                                Delete User
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -660,10 +770,10 @@ export default function AdminPage() {
               <h2 className="text-lg font-semibold mb-4">Usage Statistics</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Total Users', value: '12,847', color: 'from-cyan-500/15 to-cyan-500/5' },
-                  { label: 'Total Searches', value: '1.2M', color: 'from-purple-500/15 to-purple-500/5' },
-                  { label: 'Total Conversations', value: '458K', color: 'from-emerald-500/15 to-emerald-500/5' },
-                  { label: 'Active Today', value: '3,214', color: 'from-amber-500/15 to-amber-500/5' },
+                  { label: 'Total Users', value: stats.totalUsers.toLocaleString(), color: 'from-cyan-500/15 to-cyan-500/5' },
+                  { label: 'Total Searches', value: stats.totalSearches.toLocaleString(), color: 'from-purple-500/15 to-purple-500/5' },
+                  { label: 'Total Conversations', value: stats.totalConversations.toLocaleString(), color: 'from-emerald-500/15 to-emerald-500/5' },
+                  { label: 'Active Today', value: stats.activeToday.toLocaleString(), color: 'from-amber-500/15 to-amber-500/5' },
                 ].map((stat) => (
                   <div key={stat.label} className={`rounded-xl p-4 bg-gradient-to-br ${stat.color} border border-white/5`}>
                     <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>

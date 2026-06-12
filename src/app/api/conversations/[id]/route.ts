@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const user = await getSessionUser(req)
+    const user = await getSessionUser()
     const activeUserId = user ? user.id : 'local-user'
 
     const conversation = await db.conversation.findFirst({
@@ -31,7 +31,8 @@ export async function GET(
 
     return NextResponse.json({ conversation })
   } catch (error) {
-    console.error('Get conversation error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Get conversation error:', msg)
     return NextResponse.json(
       { error: 'Failed to get conversation' },
       { status: 500 }
@@ -46,7 +47,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const user = await getSessionUser(req)
+    const user = await getSessionUser()
     const activeUserId = user ? user.id : 'local-user'
 
     // Verify ownership first
@@ -67,7 +68,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete conversation error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Delete conversation error:', msg)
     return NextResponse.json(
       { error: 'Failed to delete conversation' },
       { status: 500 }

@@ -54,7 +54,7 @@ interface AppState {
   setPageParams: (params: Record<string, string>) => void
   navigate: (page: AppPage, params?: Record<string, string>) => void
 
-  // Auth (simplified - local user state)
+  // Auth
   isAuthenticated: boolean
   setIsAuthenticated: (v: boolean) => void
   currentUser: {
@@ -87,6 +87,8 @@ interface AppState {
   setCurrentFollowUps: (followUps: string[]) => void
   isLoading: boolean
   setIsLoading: (loading: boolean) => void
+  searchesUsed: number
+  setSearchesUsed: (count: number) => void
   isDeepResearch: boolean
   setIsDeepResearch: (v: boolean) => void
   researchProgress: number
@@ -104,20 +106,18 @@ interface AppState {
   reset: () => void
 }
 
-const defaultUser = {
-  id: 'local-user',
-  email: 'user@nexus.ai',
-  name: 'Researcher',
-  avatar: '',
-  role: 'user',
-  plan: 'pro',
-  onboarded: true,
-  company: 'Nexus Labs',
-  jobTitle: 'Senior Researcher',
-  bio: 'Exploring the frontiers of AI-powered research and knowledge discovery.',
+/**
+ * ES2017-safe findLastIndex polyfill.
+ * B7: Replaces Array.prototype.findLastIndex which requires ES2023.
+ */
+function findLastIndex<T>(arr: T[], predicate: (item: T) => boolean): number {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (predicate(arr[i])) return i
+  }
+  return -1
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set) => ({
   // Navigation
   page: 'landing',
   setPage: (page) => set({ page }),
@@ -128,13 +128,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     window.scrollTo({ top: 0 })
   },
 
-  // Auth
+  // Auth — no default user, must come from DB
   isAuthenticated: false,
   setIsAuthenticated: (v) => set({ isAuthenticated: v }),
   currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
   logout: () => {
-    fetch('/api/auth/logout', { method: 'POST' }).catch(console.error)
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
     localStorage.removeItem('nexus_page')
     localStorage.removeItem('nexus_conv_id')
     set({
@@ -157,7 +157,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateLastAssistantMessage: (content) =>
     set((state) => {
       const messages = [...state.messages]
-      const lastIdx = messages.findLastIndex((m) => m.role === 'assistant')
+      const lastIdx = findLastIndex(messages, (m) => m.role === 'assistant')
       if (lastIdx >= 0) {
         messages[lastIdx] = { ...messages[lastIdx], content }
       }
@@ -166,7 +166,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   finalizeLastAssistantMessage: (sources, followUps) =>
     set((state) => {
       const messages = [...state.messages]
-      const lastIdx = messages.findLastIndex((m) => m.role === 'assistant')
+      const lastIdx = findLastIndex(messages, (m) => m.role === 'assistant')
       if (lastIdx >= 0) {
         messages[lastIdx] = {
           ...messages[lastIdx],
@@ -185,6 +185,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentFollowUps: (followUps) => set({ currentFollowUps: followUps }),
   isLoading: false,
   setIsLoading: (loading) => set({ isLoading: loading }),
+  searchesUsed: 0,
+  setSearchesUsed: (count) => set({ searchesUsed: count }),
   isDeepResearch: false,
   setIsDeepResearch: (v) => set({ isDeepResearch: v }),
   researchProgress: 0,
@@ -217,56 +219,3 @@ export const useAppStore = create<AppState>((set, get) => ({
       researchProgress: 0,
     }),
 }))
-
-// Helper to login (database-persisted demo auth)
-export async function loginAsDefault() {
-  await loginDemoUser(false)
-}
-
-export async function loginAsAdmin() {
-  await loginDemoUser(true)
-}
-
-async function loginDemoUser(isAdmin: boolean) {
-  const store = useAppStore.getState()
-  const email = isAdmin ? 'admin@nexus.ai' : 'demo@nexus.ai'
-  const name = isAdmin ? 'Admin Researcher' : 'Demo Researcher'
-  const password = 'DemoPassword123!'
-
-  try {
-    // Try login
-    let res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-
-    if (!res.ok) {
-      // Try signup
-      const signupRes = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
-      })
-      if (signupRes.ok) {
-        res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        })
-      }
-    }
-
-    if (res.ok) {
-      const { user } = await res.json()
-      if (isAdmin) user.role = 'admin'
-      store.setCurrentUser(user)
-      store.setIsAuthenticated(true)
-      store.navigate(isAdmin ? 'admin' : 'dashboard')
-    } else {
-      console.error('Demo login failed')
-    }
-  } catch (err) {
-    console.error('Demo login error:', err)
-  }
-}

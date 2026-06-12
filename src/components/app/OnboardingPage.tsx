@@ -22,7 +22,7 @@ import {
   ChevronRight,
   Check,
 } from 'lucide-react'
-import { loginAsDefault } from '@/store/app-store'
+import { useAppStore } from '@/store/app-store'
 import { Button } from '@/components/ui/button'
 
 /* ------------------------------------------------------------------ */
@@ -185,6 +185,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
 /*  OnboardingPage component                                           */
 /* ------------------------------------------------------------------ */
 export default function OnboardingPage() {
+  const navigate = useAppStore((s) => s.navigate)
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
   const [selections, setSelections] = useState<Record<number, string[]>>({
@@ -229,12 +230,32 @@ export default function OnboardingPage() {
     }
   }
 
+  const finishOnboarding = async (dataSelections: any) => {
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          onboarded: true,
+          onboardingData: dataSelections,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        useAppStore.setState({ currentUser: data.user })
+      }
+    } catch (e) {
+      console.error('Failed to save onboarding data:', e)
+    }
+    navigate('dashboard')
+  }
+
   const handleSkip = () => {
-    loginAsDefault()
+    finishOnboarding({})
   }
 
   const handleGetStarted = () => {
-    loginAsDefault()
+    finishOnboarding(selections)
   }
 
   const hasSelection = (selections[step] || []).length > 0

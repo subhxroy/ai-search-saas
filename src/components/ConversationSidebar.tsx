@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MessageSquarePlus, Trash2, ChevronLeft, MessageSquare, Clock } from 'lucide-react'
-import { useChatStore } from '@/store/chat-store'
+import { useAppStore } from '@/store/app-store'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -15,7 +15,15 @@ interface ConversationItem {
 }
 
 export default function ConversationSidebar() {
-  const { sidebarOpen, setSidebarOpen, conversationId, setConversationId, setMessages, setView, setCurrentSources, setCurrentFollowUps } = useChatStore()
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen)
+  const setSidebarOpen = useAppStore((s) => s.setSidebarOpen)
+  const conversationId = useAppStore((s) => s.conversationId)
+  const setConversationId = useAppStore((s) => s.setConversationId)
+  const setMessages = useAppStore((s) => s.setMessages)
+  const navigate = useAppStore((s) => s.navigate)
+  const setCurrentSources = useAppStore((s) => s.setCurrentSources)
+  const setCurrentFollowUps = useAppStore((s) => s.setCurrentFollowUps)
+
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -47,7 +55,7 @@ export default function ConversationSidebar() {
         const data = await res.json()
         const conv = data.conversation
         setConversationId(conv.id)
-        setView('chat')
+        navigate('chat')
         setCurrentSources([])
         setCurrentFollowUps([])
         setMessages(
@@ -73,7 +81,7 @@ export default function ConversationSidebar() {
       if (res.ok) {
         setConversations((prev) => prev.filter((c) => c.id !== id))
         if (conversationId === id) {
-          useChatStore.getState().reset()
+          useAppStore.getState().reset()
         }
       }
     } catch {
@@ -82,7 +90,7 @@ export default function ConversationSidebar() {
   }
 
   const startNewChat = () => {
-    useChatStore.getState().reset()
+    useAppStore.getState().reset()
     setSidebarOpen(false)
   }
 

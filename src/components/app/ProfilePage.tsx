@@ -57,15 +57,34 @@ export default function ProfilePage() {
         .toUpperCase()
     : 'U'
 
-  const handleSave = () => {
+  const [isSaving, setIsSaving] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  const handleSave = async () => {
     if (!currentUser) return
-    setCurrentUser({
-      ...currentUser,
-      name,
-      company,
-      jobTitle,
-      bio,
-    })
+    setIsSaving(true)
+    setSuccess(false)
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, company, jobTitle, bio }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setCurrentUser(data.user)
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to save changes')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('A network error occurred')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -212,11 +231,12 @@ export default function ProfilePage() {
       <motion.div variants={itemVariants} className="mb-8">
         <Button
           onClick={handleSave}
+          disabled={isSaving}
           className="w-full sm:w-auto px-8 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] h-auto"
           style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }}
         >
           <Save className="h-4 w-4 mr-2" />
-          Save Changes
+          {isSaving ? 'Saving...' : success ? 'Saved!' : 'Save Changes'}
         </Button>
       </motion.div>
 

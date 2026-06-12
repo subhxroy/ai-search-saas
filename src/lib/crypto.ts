@@ -1,49 +1,127 @@
 import crypto from 'crypto'
 
-const SECRET = process.env.JWT_SECRET || 'nexus-default-secret-key-1234567890'
+/* ------------------------------------------------------------------ */
+/*  Secret key — REQUIRED in production, warning in development        */
+/* ------------------------------------------------------------------ */
+
+const SECRET = (() => {
+  const key = process.env.JWT_SECRET
+  if (key && key.length >= 32) return key
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL: JWT_SECRET environment variable is required in production (min 32 chars).'
+    )
+  }
+  // Development-only fallback — logged once
+  console.warn(
+    '⚠️  JWT_SECRET is not set. Using insecure dev-only fallback. Set JWT_SECRET in .env before deploying.'
+  )
+  return 'nexus-dev-only-insecure-fallback-key-do-not-deploy'
+})()
+
+/* ------------------------------------------------------------------ */
+/*  PBKDF2 password hashing                                            */
+/* ------------------------------------------------------------------ */
+
+const CURRENT_ITERATIONS = 100_000
+const KEY_LENGTH = 64
+const DIGEST = 'sha512'
 
 /**
- * Hash a password using Node.js native pbkdf2Sync.
- * Returns salt:hash format.
+ * Hash a password using PBKDF2.
+ * Returns `iterations:salt:hash` so the iteration count is self-describing.
  */
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex')
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
-  return `${salt}:${hash}`
+  const hash = crypto
+    .pbkdf2Sync(password, salt, CURRENT_ITERATIONS, KEY_LENGTH, DIGEST)
+    .toString('hex')
+  return `${CURRENT_ITERATIONS}:${salt}:${hash}`
 }
 
 /**
- * Verify a password against a stored hash string (salt:hash).
+ * Verify a password against a stored hash.
+ * Supports both legacy format (salt:hash @ 1000 iter) and current (iterations:salt:hash).
+ * Returns { valid, needsRehash }.
  */
-export function verifyPassword(password: string, stored: string): boolean {
+export function verifyPassword(
+  password: string,
+  stored: string
+): { valid: boolean; needsRehash: boolean } {
   const parts = stored.split(':')
-  const salt = parts[0]
-  const originalHash = parts[1]
-  if (!salt || !originalHash) return false
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
-  return hash === originalHash
+
+  let iterations: number
+  let salt: string
+  let originalHash: string
+
+  if (parts.length === 3) {
+    // Current format: iterations:salt:hash
+    iterations = parseInt(parts[0], 10)
+    salt = parts[1]
+    originalHash = parts[2]
+  } else if (parts.length === 2) {
+    // Legacy format: salt:hash (1000 iterations)
+    iterations = 1000
+    salt = parts[0]
+    originalHash = parts[1]
+  } else {
+    return { valid: false, needsRehash: false }
+  }
+
+  if (!salt || !originalHash || isNaN(iterations)) {
+    return { valid: false, needsRehash: false }
+  }
+
+  const hash = crypto
+    .pbkdf2Sync(password, salt, iterations, KEY_LENGTH, DIGEST)
+    .toString('hex')
+
+  // Constant-time comparison to prevent timing attacks
+  const valid =
+    hash.length === originalHash.length &&
+    crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(originalHash))
+
+  return { valid, needsRehash: valid && iterations < CURRENT_ITERATIONS }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Signed session tokens (HMAC-SHA256)                                */
+/* ------------------------------------------------------------------ */
 
 /**
  * Sign a user session.
- * Returns userId.signature
+ * Returns `userId.signature`.
  */
 export function signSession(userId: string): string {
-  const signature = crypto.createHmac('sha256', SECRET).update(userId).digest('hex')
+  const signature = crypto
+    .createHmac('sha256', SECRET)
+    .update(userId)
+    .digest('hex')
   return `${userId}.${signature}`
 }
 
 /**
- * Verify a signed user session.
- * Returns userId if signature is valid, or null.
+ * Verify a signed session token.
+ * Returns the userId if the signature is valid, otherwise null.
  */
 export function verifySession(token: string): string | null {
-  const parts = token.split('.')
-  const userId = parts[0]
-  const signature = parts[1]
+  const dotIndex = token.indexOf('.')
+  if (dotIndex < 1) return null
+
+  const userId = token.slice(0, dotIndex)
+  const signature = token.slice(dotIndex + 1)
   if (!userId || !signature) return null
-  const expectedSignature = crypto.createHmac('sha256', SECRET).update(userId).digest('hex')
-  if (signature === expectedSignature) {
+
+  const expected = crypto
+    .createHmac('sha256', SECRET)
+    .update(userId)
+    .digest('hex')
+
+  // Constant-time comparison
+  if (
+    expected.length === signature.length &&
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  ) {
     return userId
   }
   return null

@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     const { passwordHash: _, ...userWithoutPassword } = user
     return NextResponse.json({ user: userWithoutPassword })
   } catch (error) {
-    console.error('Signup error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Signup error:', msg)
     return NextResponse.json(
       { error: 'Internal server error during registration' },
       { status: 500 }

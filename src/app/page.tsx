@@ -464,8 +464,12 @@ export default function Home() {
       try {
         const res = await fetch('/api/auth/me')
         if (res.ok) {
-          const { user } = await res.json()
-          useAppStore.setState({ currentUser: user, isAuthenticated: true })
+          const { user, searchesUsed } = await res.json()
+          useAppStore.setState({
+            currentUser: user,
+            isAuthenticated: true,
+            searchesUsed: searchesUsed || 0,
+          })
 
           // Restore last page and conversation ID
           const savedPage = localStorage.getItem('nexus_page')

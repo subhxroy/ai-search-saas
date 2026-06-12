@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSessionUser } from '@/lib/auth-session'
+import { ensureLocalUser } from '@/lib/ensure-local-user'
 
 // GET /api/conversations - List conversations for the logged-in user (or guest)
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const user = await getSessionUser(req)
+    const user = await getSessionUser()
     const activeUserId = user ? user.id : 'local-user'
 
     const conversations = await db.conversation.findMany({
@@ -37,7 +38,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ conversations: formattedConversations })
   } catch (error) {
-    console.error('List conversations error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('List conversations error:', msg)
     return NextResponse.json(
       { error: 'Failed to list conversations' },
       { status: 500 }
@@ -48,20 +50,12 @@ export async function GET(req: NextRequest) {
 // POST /api/conversations - Create a new conversation
 export async function POST(req: NextRequest) {
   try {
-    const user = await getSessionUser(req)
+    const user = await getSessionUser()
     const activeUserId = user ? user.id : 'local-user'
     const { title } = await req.json()
 
     if (activeUserId === 'local-user') {
-      await db.user.upsert({
-        where: { id: 'local-user' },
-        update: {},
-        create: {
-          id: 'local-user',
-          email: 'local@nexus.ai',
-          name: 'Local User',
-        }
-      })
+      await ensureLocalUser()
     }
 
     const conversation = await db.conversation.create({
@@ -73,7 +67,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ conversation })
   } catch (error) {
-    console.error('Create conversation error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Create conversation error:', msg)
     return NextResponse.json(
       { error: 'Failed to create conversation' },
       { status: 500 }
@@ -84,7 +79,7 @@ export async function POST(req: NextRequest) {
 // DELETE /api/conversations - Delete all conversations for the active user
 export async function DELETE(req: NextRequest) {
   try {
-    const user = await getSessionUser(req)
+    const user = await getSessionUser()
     const activeUserId = user ? user.id : 'local-user'
 
     // Delete messages and sources associated with user's conversations
@@ -108,7 +103,8 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Delete all conversations error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Delete all conversations error:', msg)
     return NextResponse.json(
       { error: 'Failed to delete conversations' },
       { status: 500 }

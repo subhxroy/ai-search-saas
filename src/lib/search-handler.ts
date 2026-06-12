@@ -1,5 +1,10 @@
 import { useAppStore } from '@/store/app-store'
 
+/**
+ * B8 fix: All state reads use useAppStore.getState() at the point of use
+ * to avoid stale closure captures after async mutations.
+ */
+
 export async function handleSearch(query: string) {
   const store = useAppStore.getState()
   if (!query.trim() || store.isLoading) return
@@ -30,7 +35,6 @@ export async function handleSearch(query: string) {
       const errorText = await res.text().catch(() => '')
       console.error('Chat API error:', res.status, errorText?.slice(0, 200))
 
-      // Provide user-friendly error messages based on status code
       let userMessage = 'I encountered an error while searching. Please try again.'
       if (res.status === 502 || res.status === 504) {
         userMessage = 'The search service is taking too long to respond. Please try again in a moment.'
@@ -40,17 +44,20 @@ export async function handleSearch(query: string) {
         userMessage = 'Something went wrong on our end. Please try again.'
       }
 
-      store.updateLastAssistantMessage(userMessage)
-      store.finalizeLastAssistantMessage([], [])
-      store.setIsLoading(false)
+      // Read fresh state after async
+      const s = useAppStore.getState()
+      s.updateLastAssistantMessage(userMessage)
+      s.finalizeLastAssistantMessage([], [])
+      s.setIsLoading(false)
       return
     }
 
     const reader = res.body?.getReader()
     if (!reader) {
-      store.updateLastAssistantMessage('Failed to read response. Please try again.')
-      store.finalizeLastAssistantMessage([], [])
-      store.setIsLoading(false)
+      const s = useAppStore.getState()
+      s.updateLastAssistantMessage('Failed to read response. Please try again.')
+      s.finalizeLastAssistantMessage([], [])
+      s.setIsLoading(false)
       return
     }
 
@@ -70,17 +77,19 @@ export async function handleSearch(query: string) {
         if (line.startsWith('data: ')) {
           try {
             const parsed = JSON.parse(line.slice(6))
+            // Always read fresh state for mutations
+            const s = useAppStore.getState()
             if (parsed.type === 'sources') {
-              store.setCurrentSources(parsed.data)
+              s.setCurrentSources(parsed.data)
             } else if (parsed.type === 'token') {
               accumulatedText += parsed.data
-              store.updateLastAssistantMessage(accumulatedText)
+              s.updateLastAssistantMessage(accumulatedText)
             } else if (parsed.type === 'followups') {
-              store.setCurrentFollowUps(parsed.data)
+              s.setCurrentFollowUps(parsed.data)
             } else if (parsed.type === 'done') {
-              store.setConversationId(parsed.data.conversationId)
+              s.setConversationId(parsed.data.conversationId)
             } else if (parsed.type === 'progress') {
-              store.setResearchProgress(parsed.data)
+              s.setResearchProgress(parsed.data)
             }
           } catch {
             // skip malformed JSON lines
@@ -89,20 +98,23 @@ export async function handleSearch(query: string) {
       }
     }
 
+    // Finalize with fresh state
     const finalState = useAppStore.getState()
-    store.finalizeLastAssistantMessage(
+    finalState.finalizeLastAssistantMessage(
       finalState.currentSources,
       finalState.currentFollowUps
     )
   } catch (err) {
-    console.error('Search handler error:', err)
-    store.updateLastAssistantMessage(
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Search handler error:', msg)
+    const s = useAppStore.getState()
+    s.updateLastAssistantMessage(
       'Network error. Please check your connection and try again.'
     )
-    store.finalizeLastAssistantMessage([], [])
+    s.finalizeLastAssistantMessage([], [])
   } finally {
-    store.setIsLoading(false)
-    store.setResearchProgress(0)
+    useAppStore.getState().setIsLoading(false)
+    useAppStore.getState().setResearchProgress(0)
   }
 }
 
@@ -117,12 +129,13 @@ export async function handleFollowUp(question: string) {
   store.addMessage({ role: 'assistant', content: '', isStreaming: true })
 
   try {
+    const convId = useAppStore.getState().conversationId
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: question.trim(),
-        conversationId: store.conversationId || undefined,
+        conversationId: convId || undefined,
       }),
     })
 
@@ -131,17 +144,19 @@ export async function handleFollowUp(question: string) {
       if (res.status === 502 || res.status === 504) {
         userMessage = 'The search service is taking too long. Please try again in a moment.'
       }
-      store.updateLastAssistantMessage(userMessage)
-      store.finalizeLastAssistantMessage([], [])
-      store.setIsLoading(false)
+      const s = useAppStore.getState()
+      s.updateLastAssistantMessage(userMessage)
+      s.finalizeLastAssistantMessage([], [])
+      s.setIsLoading(false)
       return
     }
 
     const reader = res.body?.getReader()
     if (!reader) {
-      store.updateLastAssistantMessage('Failed to read response.')
-      store.finalizeLastAssistantMessage([], [])
-      store.setIsLoading(false)
+      const s = useAppStore.getState()
+      s.updateLastAssistantMessage('Failed to read response.')
+      s.finalizeLastAssistantMessage([], [])
+      s.setIsLoading(false)
       return
     }
 
@@ -161,15 +176,16 @@ export async function handleFollowUp(question: string) {
         if (line.startsWith('data: ')) {
           try {
             const parsed = JSON.parse(line.slice(6))
+            const s = useAppStore.getState()
             if (parsed.type === 'sources') {
-              store.setCurrentSources(parsed.data)
+              s.setCurrentSources(parsed.data)
             } else if (parsed.type === 'token') {
               accumulatedText += parsed.data
-              store.updateLastAssistantMessage(accumulatedText)
+              s.updateLastAssistantMessage(accumulatedText)
             } else if (parsed.type === 'followups') {
-              store.setCurrentFollowUps(parsed.data)
+              s.setCurrentFollowUps(parsed.data)
             } else if (parsed.type === 'done') {
-              store.setConversationId(parsed.data.conversationId)
+              s.setConversationId(parsed.data.conversationId)
             }
           } catch {
             // skip
@@ -179,15 +195,17 @@ export async function handleFollowUp(question: string) {
     }
 
     const finalState = useAppStore.getState()
-    store.finalizeLastAssistantMessage(
+    finalState.finalizeLastAssistantMessage(
       finalState.currentSources,
       finalState.currentFollowUps
     )
   } catch (err) {
-    console.error('Follow-up error:', err)
-    store.updateLastAssistantMessage('Network error. Please try again.')
-    store.finalizeLastAssistantMessage([], [])
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Follow-up error:', msg)
+    const s = useAppStore.getState()
+    s.updateLastAssistantMessage('Network error. Please try again.')
+    s.finalizeLastAssistantMessage([], [])
   } finally {
-    store.setIsLoading(false)
+    useAppStore.getState().setIsLoading(false)
   }
 }

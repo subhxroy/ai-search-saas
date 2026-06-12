@@ -95,7 +95,7 @@ const itemVariants = {
 /* ------------------------------------------------------------------ */
 
 export default function DashboardPage() {
-  const { currentUser, isDeepResearch, setIsDeepResearch, navigate, isLoading } =
+  const { currentUser, isDeepResearch, setIsDeepResearch, navigate, isLoading, searchesUsed } =
     useAppStore()
 
   const [query, setQuery] = useState('')
@@ -127,14 +127,8 @@ export default function DashboardPage() {
           )
         }
       } catch {
-        // Use placeholder data on error
         if (!cancelled) {
-          setConversations([
-            { id: '1', title: 'AI market analysis 2025', date: new Date(Date.now() - 3600000).toISOString(), messageCount: 8, preview: 'Comprehensive overview of AI market trends...' },
-            { id: '2', title: 'Quantum computing breakthroughs', date: new Date(Date.now() - 86400000).toISOString(), messageCount: 5, preview: 'Recent advances in quantum error correction...' },
-            { id: '3', title: 'SaaS pricing strategies', date: new Date(Date.now() - 172800000).toISOString(), messageCount: 12, preview: 'Analysis of usage-based pricing models...' },
-            { id: '4', title: 'Climate tech investments', date: new Date(Date.now() - 345600000).toISOString(), messageCount: 6, preview: 'Top climate tech startups and funding rounds...' },
-          ])
+          setConversations([])
         }
       } finally {
         if (!cancelled) setLoadingConversations(false)
@@ -161,7 +155,7 @@ export default function DashboardPage() {
     [isLoading]
   )
 
-  const searchesUsed = 47
+
   const searchesLimit = currentUser?.plan === 'pro' || currentUser?.plan === 'enterprise' ? 'Unlimited' : '50'
 
   return (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-import { verifyPassword, signSession } from '@/lib/crypto'
+import { verifyPassword, hashPassword, signSession } from '@/lib/crypto'
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,13 +28,22 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verify password hash
-    const isValid = verifyPassword(password, user.passwordHash)
-    if (!isValid) {
+    // Verify password hash (supports legacy + current formats)
+    const { valid, needsRehash } = verifyPassword(password, user.passwordHash)
+    if (!valid) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
+    }
+
+    // Transparent rehash: upgrade legacy 1000-iteration hashes to 100k
+    if (needsRehash) {
+      const newHash = hashPassword(password)
+      await db.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash },
+      })
     }
 
     // Sign session and set cookie
@@ -52,7 +61,8 @@ export async function POST(req: NextRequest) {
     const { passwordHash: _, ...userWithoutPassword } = user
     return NextResponse.json({ user: userWithoutPassword })
   } catch (error) {
-    console.error('Login error:', error)
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Login error:', msg)
     return NextResponse.json(
       { error: 'Internal server error during login' },
       { status: 500 }

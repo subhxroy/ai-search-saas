@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Eye, EyeOff, Github, Check } from 'lucide-react'
-import { useAppStore, loginAsDefault } from '@/store/app-store'
+import { useAppStore } from '@/store/app-store'
 
 /* ------------------------------------------------------------------ */
 /*  Google icon                                                        */
@@ -192,7 +192,7 @@ export default function SignupPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
             <button
               type="button"
-              onClick={() => loginAsDefault()}
+              onClick={() => setError('Google sign-up is currently disabled. Please use the email form.')}
               className="btn-ghost w-full"
               style={{ height: 44, gap: 10, justifyContent: 'center', display: 'flex', alignItems: 'center' }}
             >
@@ -201,7 +201,7 @@ export default function SignupPage() {
             </button>
             <button
               type="button"
-              onClick={() => loginAsDefault()}
+              onClick={() => setError('GitHub sign-up is currently disabled. Please use the email form.')}
               className="btn-ghost w-full"
               style={{ height: 44, gap: 10, justifyContent: 'center', display: 'flex', alignItems: 'center' }}
             >
@@ -378,37 +378,7 @@ export default function SignupPage() {
             </button>
           </p>
 
-          {/* Demo login */}
-          <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--hairline)' }}>
-            <button
-              type="button"
-              onClick={loginAsDefault}
-              style={{
-                width: '100%',
-                fontSize: 13,
-                fontWeight: 500,
-                color: 'var(--stone)',
-                background: 'var(--surface-card)',
-                border: '1px solid var(--hairline)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                padding: '10px 0',
-                transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--surface-elevated)'
-                e.currentTarget.style.borderColor = 'var(--hairline-strong)'
-                e.currentTarget.style.color = 'var(--charcoal)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--surface-card)'
-                e.currentTarget.style.borderColor = 'var(--hairline)'
-                e.currentTarget.style.color = 'var(--stone)'
-              }}
-            >
-              Demo Login — Skip to Dashboard
-            </button>
-          </div>
+
         </div>
       </motion.div>
     </div>

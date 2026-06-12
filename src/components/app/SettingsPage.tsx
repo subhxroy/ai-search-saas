@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/store/app-store'
 import {
@@ -105,6 +105,110 @@ export default function SettingsPage() {
   // Security settings
   const [twoFactor, setTwoFactor] = useState(false)
 
+  // Status & loading indicators
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null)
+  const [emailStatus, setEmailStatus] = useState<string | null>(null)
+  const [passwordStatus, setPasswordStatus] = useState<string | null>(null)
+
+  // Sync state with currentUser
+  useEffect(() => {
+    if (currentUser) {
+      setEmailInput(currentUser.email || '')
+      setFontSize((currentUser as any).fontSize || 'medium')
+      setCompactMode((currentUser as any).compactMode || false)
+      setEmailNotifs((currentUser as any).emailNotifs ?? true)
+      setResearchNotifs((currentUser as any).researchNotifs ?? true)
+      setWeeklyDigest((currentUser as any).weeklyDigest ?? false)
+      setProductUpdates((currentUser as any).productUpdates ?? true)
+      setProfilePublic((currentUser as any).profilePublic ?? true)
+      setSaveHistory((currentUser as any).saveHistory ?? true)
+      setDataRetention((currentUser as any).dataRetention || '90')
+      setDefaultModel((currentUser as any).defaultModel || 'auto')
+      setResponseStyle((currentUser as any).responseStyle || 'balanced')
+      setCiteSources((currentUser as any).citeSources ?? true)
+      setAutoFollowUps((currentUser as any).autoFollowUps ?? true)
+      setDeepResearchDefault((currentUser as any).deepResearchDefault ?? false)
+    }
+  }, [currentUser])
+
+  const savePreference = async (key: string, value: any) => {
+    setIsUpdating(true)
+    setUpdateStatus('Saving...')
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        useAppStore.setState({ currentUser: data.user })
+        setUpdateStatus('Saved')
+        setTimeout(() => setUpdateStatus(null), 2000)
+      } else {
+        const data = await res.json()
+        setUpdateStatus(data.error || 'Error saving')
+      }
+    } catch (e) {
+      console.error(e)
+      setUpdateStatus('Error saving')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const updatePreference = async (key: string, value: any, setter: (val: any) => void) => {
+    setter(value)
+    await savePreference(key, value)
+  }
+
+  const handleUpdateEmail = async () => {
+    if (!emailInput) return
+    setEmailStatus('Updating...')
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        useAppStore.setState({ currentUser: data.user })
+        setEmailStatus('Email updated successfully!')
+        setTimeout(() => setEmailStatus(null), 3000)
+      } else {
+        setEmailStatus(data.error || 'Failed to update email')
+      }
+    } catch (err) {
+      console.error(err)
+      setEmailStatus('A network error occurred')
+    }
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!passwordInput) return
+    setPasswordStatus('Updating...')
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setPasswordStatus('Password updated successfully!')
+        setPasswordInput('')
+        setTimeout(() => setPasswordStatus(null), 3000)
+      } else {
+        setPasswordStatus(data.error || 'Failed to update password')
+      }
+    } catch (err) {
+      console.error(err)
+      setPasswordStatus('A network error occurred')
+    }
+  }
+
   const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
     { id: 'account', label: 'Account', icon: User },
     { id: 'appearance', label: 'Appearance', icon: Palette },
@@ -165,13 +269,19 @@ export default function SettingsPage() {
                       className="bg-white/5 border-white/10 focus:border-cyan-500/50"
                     />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 border-white/10 hover:bg-accent"
-                  >
-                    Update Email
-                  </Button>
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUpdateEmail}
+                      className="shrink-0 border-white/10 hover:bg-accent"
+                    >
+                      Update Email
+                    </Button>
+                    {emailStatus && (
+                      <span className="text-xs text-muted-foreground mt-1 text-center">{emailStatus}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -191,13 +301,19 @@ export default function SettingsPage() {
                       className="bg-white/5 border-white/10 focus:border-cyan-500/50"
                     />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 border-white/10 hover:bg-accent"
-                  >
-                    Update Password
-                  </Button>
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUpdatePassword}
+                      className="shrink-0 border-white/10 hover:bg-accent"
+                    >
+                      Update Password
+                    </Button>
+                    {passwordStatus && (
+                      <span className="text-xs text-muted-foreground mt-1 text-center">{passwordStatus}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -280,7 +396,10 @@ export default function SettingsPage() {
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setTheme('dark')}
+                    onClick={() => {
+                      setTheme('dark')
+                      savePreference('theme', 'dark')
+                    }}
                     className={`relative p-4 rounded-xl border-2 transition-all ${
                       theme === 'dark'
                         ? 'border-cyan-500/50 bg-cyan-500/5'
@@ -307,7 +426,10 @@ export default function SettingsPage() {
                     </div>
                   </button>
                   <button
-                    onClick={() => setTheme('light')}
+                    onClick={() => {
+                      setTheme('light')
+                      savePreference('theme', 'light')
+                    }}
                     className={`relative p-4 rounded-xl border-2 transition-all ${
                       theme === 'light'
                         ? 'border-cyan-500/50 bg-cyan-500/5'
@@ -344,7 +466,7 @@ export default function SettingsPage() {
                 </h3>
                 <RadioGroup
                   value={fontSize}
-                  onValueChange={(v) => setFontSize(v as 'small' | 'medium' | 'large')}
+                  onValueChange={(v) => updatePreference('fontSize', v as any, setFontSize)}
                   className="grid grid-cols-3 gap-3"
                 >
                   {[
@@ -384,7 +506,7 @@ export default function SettingsPage() {
                   </div>
                   <Switch
                     checked={compactMode}
-                    onCheckedChange={setCompactMode}
+                    onCheckedChange={(v) => updatePreference('compactMode', v, setCompactMode)}
                     className="data-[state=checked]:bg-cyan-600"
                   />
                 </div>
@@ -401,28 +523,28 @@ export default function SettingsPage() {
                   title: 'Email Notifications',
                   desc: 'Receive email updates about your account',
                   checked: emailNotifs,
-                  onChange: setEmailNotifs,
+                  onChange: (v: boolean) => updatePreference('emailNotifs', v, setEmailNotifs),
                 },
                 {
                   icon: Sparkles,
                   title: 'Research Complete',
                   desc: 'Get notified when deep research finishes',
                   checked: researchNotifs,
-                  onChange: setResearchNotifs,
+                  onChange: (v: boolean) => updatePreference('researchNotifs', v, setResearchNotifs),
                 },
                 {
                   icon: Bell,
                   title: 'Weekly Digest',
                   desc: 'Receive a weekly summary of your research activity',
                   checked: weeklyDigest,
-                  onChange: setWeeklyDigest,
+                  onChange: (v: boolean) => updatePreference('weeklyDigest', v, setWeeklyDigest),
                 },
                 {
                   icon: Settings,
                   title: 'Product Updates',
                   desc: 'Stay informed about new features and improvements',
                   checked: productUpdates,
-                  onChange: setProductUpdates,
+                  onChange: (v: boolean) => updatePreference('productUpdates', v, setProductUpdates),
                 },
               ].map((item) => (
                 <div key={item.title} className="glass-strong rounded-2xl p-5">
@@ -466,7 +588,7 @@ export default function SettingsPage() {
                   </div>
                   <Switch
                     checked={profilePublic}
-                    onCheckedChange={setProfilePublic}
+                    onCheckedChange={(v) => updatePreference('profilePublic', v, setProfilePublic)}
                     className="data-[state=checked]:bg-cyan-600"
                   />
                 </div>
@@ -488,7 +610,7 @@ export default function SettingsPage() {
                   </div>
                   <Switch
                     checked={saveHistory}
-                    onCheckedChange={setSaveHistory}
+                    onCheckedChange={(v) => updatePreference('saveHistory', v, setSaveHistory)}
                     className="data-[state=checked]:bg-cyan-600"
                   />
                 </div>
@@ -510,7 +632,7 @@ export default function SettingsPage() {
                 </h3>
                 <RadioGroup
                   value={dataRetention}
-                  onValueChange={(v) => setDataRetention(v as '30' | '90' | '365')}
+                  onValueChange={(v) => updatePreference('dataRetention', v as any, setDataRetention)}
                   className="grid grid-cols-3 gap-3"
                 >
                   {[
@@ -544,7 +666,7 @@ export default function SettingsPage() {
                   <Brain className="h-4 w-4 text-cyan-400" />
                   Default Model
                 </h3>
-                <Select value={defaultModel} onValueChange={setDefaultModel}>
+                <Select value={defaultModel} onValueChange={(v) => updatePreference('defaultModel', v, setDefaultModel)}>
                   <SelectTrigger className="w-full bg-white/5 border-white/10">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
@@ -565,7 +687,7 @@ export default function SettingsPage() {
                 </h3>
                 <RadioGroup
                   value={responseStyle}
-                  onValueChange={(v) => setResponseStyle(v as 'concise' | 'balanced' | 'detailed')}
+                  onValueChange={(v) => updatePreference('responseStyle', v as any, setResponseStyle)}
                   className="grid grid-cols-3 gap-3"
                 >
                   {[
@@ -596,21 +718,21 @@ export default function SettingsPage() {
                   title: 'Always Cite Sources',
                   desc: 'Include source citations in every response',
                   checked: citeSources,
-                  onChange: setCiteSources,
+                  onChange: (v: boolean) => updatePreference('citeSources', v, setCiteSources),
                 },
                 {
                   icon: Brain,
                   title: 'Auto-generate Follow-ups',
                   desc: 'Suggest follow-up questions after each response',
                   checked: autoFollowUps,
-                  onChange: setAutoFollowUps,
+                  onChange: (v: boolean) => updatePreference('autoFollowUps', v, setAutoFollowUps),
                 },
                 {
                   icon: Search,
                   title: 'Deep Research as Default',
                   desc: 'Use deep research mode by default for all queries',
                   checked: deepResearchDefault,
-                  onChange: setDeepResearchDefault,
+                  onChange: (v: boolean) => updatePreference('deepResearchDefault', v, setDeepResearchDefault),
                 },
               ].map((item) => (
                 <div key={item.title} className="glass-strong rounded-2xl p-5">
