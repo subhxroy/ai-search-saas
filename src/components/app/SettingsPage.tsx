@@ -77,8 +77,9 @@ export default function SettingsPage() {
   // Account settings
   const [emailInput, setEmailInput] = useState(currentUser?.email || '')
   const [passwordInput, setPasswordInput] = useState('')
-  const [googleConnected, setGoogleConnected] = useState(true)
+  const [googleConnected, setGoogleConnected] = useState(false)
   const [githubConnected, setGithubConnected] = useState(false)
+  const [historyStatus, setHistoryStatus] = useState<string | null>(null)
 
   // Appearance settings
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium')
@@ -104,6 +105,7 @@ export default function SettingsPage() {
 
   // Security settings
   const [twoFactor, setTwoFactor] = useState(false)
+  const [sessionInfo, setSessionInfo] = useState({ os: 'Windows', browser: 'Chrome' })
 
   // Status & loading indicators
   const [isUpdating, setIsUpdating] = useState(false)
@@ -111,10 +113,45 @@ export default function SettingsPage() {
   const [emailStatus, setEmailStatus] = useState<string | null>(null)
   const [passwordStatus, setPasswordStatus] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ua = navigator.userAgent
+      let os = 'Windows'
+      if (ua.indexOf('Mac') !== -1) os = 'macOS'
+      else if (ua.indexOf('Linux') !== -1) os = 'Linux'
+      else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS'
+      else if (/Android/i.test(ua)) os = 'Android'
+
+      let browser = 'Chrome'
+      if (ua.indexOf('Firefox') !== -1) browser = 'Firefox'
+      else if (ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1) browser = 'Safari'
+      else if (ua.indexOf('Edge') !== -1) browser = 'Edge'
+
+      setSessionInfo({ os, browser })
+    }
+  }, [])
+
+  const handleSignOutAllDevices = async () => {
+    setIsUpdating(true)
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' })
+      if (res.ok) {
+        useAppStore.setState({ currentUser: null })
+        window.location.reload()
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   // Sync state with currentUser
   useEffect(() => {
     if (currentUser) {
       setEmailInput(currentUser.email || '')
+      setGoogleConnected((currentUser as any).googleConnected ?? false)
+      setGithubConnected((currentUser as any).githubConnected ?? false)
       setFontSize((currentUser as any).fontSize || 'medium')
       setCompactMode((currentUser as any).compactMode || false)
       setEmailNotifs((currentUser as any).emailNotifs ?? true)
@@ -131,6 +168,36 @@ export default function SettingsPage() {
       setDeepResearchDefault((currentUser as any).deepResearchDefault ?? false)
     }
   }, [currentUser])
+
+  const handleToggleGoogle = async (checked: boolean) => {
+    setGoogleConnected(checked)
+    await savePreference('googleConnected', checked)
+  }
+
+  const handleToggleGithub = async (checked: boolean) => {
+    setGithubConnected(checked)
+    await savePreference('githubConnected', checked)
+  }
+
+  const handleClearHistory = async () => {
+    if (!confirm('Are you sure you want to delete all search and conversation history? This cannot be undone.')) {
+      return
+    }
+    setHistoryStatus('Clearing...')
+    try {
+      const res = await fetch('/api/conversations', { method: 'DELETE' })
+      if (res.ok) {
+        setHistoryStatus('History cleared!')
+        useAppStore.getState().reset()
+        setTimeout(() => setHistoryStatus(null), 3000)
+      } else {
+        setHistoryStatus('Failed to clear history')
+      }
+    } catch (e) {
+      console.error(e)
+      setHistoryStatus('Error clearing history')
+    }
+  }
 
   const savePreference = async (key: string, value: any) => {
     setIsUpdating(true)
@@ -338,7 +405,7 @@ export default function SettingsPage() {
                     </div>
                     <Switch
                       checked={googleConnected}
-                      onCheckedChange={setGoogleConnected}
+                      onCheckedChange={handleToggleGoogle}
                       className="data-[state=checked]:bg-cyan-600"
                     />
                   </div>
@@ -356,7 +423,7 @@ export default function SettingsPage() {
                     </div>
                     <Switch
                       checked={githubConnected}
-                      onCheckedChange={setGithubConnected}
+                      onCheckedChange={handleToggleGithub}
                       className="data-[state=checked]:bg-cyan-600"
                     />
                   </div>
@@ -617,10 +684,12 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={handleClearHistory}
+                  disabled={historyStatus !== null}
                   className="gap-2 text-red-400 border-red-500/20 hover:bg-red-500/10 hover:text-red-300"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Clear All History
+                  {historyStatus || 'Clear All History'}
                 </Button>
               </div>
 
@@ -797,7 +866,7 @@ export default function SettingsPage() {
                         <Monitor className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Chrome on macOS</p>
+                        <p className="text-sm font-medium">{sessionInfo.browser} on {sessionInfo.os}</p>
                         <p className="text-xs text-muted-foreground">Current session</p>
                       </div>
                     </div>
@@ -805,25 +874,13 @@ export default function SettingsPage() {
                       Active
                     </span>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <Smartphone className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Safari on iPhone</p>
-                        <p className="text-xs text-muted-foreground">Last active 2h ago</p>
-                      </div>
-                    </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-medium">
-                      Idle
-                    </span>
-                  </div>
                 </div>
                 <Separator className="bg-white/5" />
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={handleSignOutAllDevices}
+                  disabled={isUpdating}
                   className="gap-2 border-white/10 hover:bg-accent text-destructive hover:text-destructive"
                 >
                   <LogOut className="h-3.5 w-3.5" />

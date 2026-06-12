@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
-import { hashPassword, signSession } from '@/lib/crypto'
+import { signSession } from '@/lib/crypto'
+import { insforge } from '@/lib/insforge'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     const trimmedEmail = email.trim().toLowerCase()
 
-    // Check if user already exists
+    // Check if user already exists in db
     const existingUser = await db.user.findUnique({
       where: { email: trimmedEmail },
     })
@@ -28,13 +29,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Hash password and create user
-    const passwordHash = hashPassword(password)
+    // Sign up using InsForge Auth
+    const { data: insforgeData, error: insforgeError } = await insforge.auth.signUp({
+      email: trimmedEmail,
+      password,
+      name: name.trim(),
+    })
+
+    if (insforgeError) {
+      return NextResponse.json(
+        { error: insforgeError.message || 'Registration failed' },
+        { status: 400 }
+      )
+    }
+
+    if (!insforgeData || !insforgeData.user) {
+      return NextResponse.json(
+        { error: 'Registration failed to return user data' },
+        { status: 500 }
+      )
+    }
+
+    // Create user in database (Prisma User model)
     const user = await db.user.create({
       data: {
+        id: insforgeData.user.id,
         email: trimmedEmail,
         name: name.trim(),
-        passwordHash,
         role: 'user',
         plan: 'free',
         onboarded: true,
