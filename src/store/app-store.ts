@@ -133,7 +133,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setIsAuthenticated: (v) => set({ isAuthenticated: v }),
   currentUser: null,
   setCurrentUser: (user) => set({ currentUser: user }),
-  logout: () =>
+  logout: () => {
+    fetch('/api/auth/logout', { method: 'POST' }).catch(console.error)
+    localStorage.removeItem('nexus_page')
+    localStorage.removeItem('nexus_conv_id')
     set({
       isAuthenticated: false,
       currentUser: null,
@@ -142,7 +145,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       conversationId: null,
       currentSources: [],
       currentFollowUps: [],
-    }),
+    })
+  },
 
   // Chat
   conversationId: null,
@@ -214,17 +218,55 @@ export const useAppStore = create<AppState>((set, get) => ({
     }),
 }))
 
-// Helper to login (simplified local auth)
-export function loginAsDefault() {
-  const store = useAppStore.getState()
-  store.setCurrentUser(defaultUser)
-  store.setIsAuthenticated(true)
-  store.navigate('dashboard')
+// Helper to login (database-persisted demo auth)
+export async function loginAsDefault() {
+  await loginDemoUser(false)
 }
 
-export function loginAsAdmin() {
+export async function loginAsAdmin() {
+  await loginDemoUser(true)
+}
+
+async function loginDemoUser(isAdmin: boolean) {
   const store = useAppStore.getState()
-  store.setCurrentUser({ ...defaultUser, role: 'admin' })
-  store.setIsAuthenticated(true)
-  store.navigate('admin')
+  const email = isAdmin ? 'admin@nexus.ai' : 'demo@nexus.ai'
+  const name = isAdmin ? 'Admin Researcher' : 'Demo Researcher'
+  const password = 'DemoPassword123!'
+
+  try {
+    // Try login
+    let res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!res.ok) {
+      // Try signup
+      const signupRes = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      })
+      if (signupRes.ok) {
+        res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        })
+      }
+    }
+
+    if (res.ok) {
+      const { user } = await res.json()
+      if (isAdmin) user.role = 'admin'
+      store.setCurrentUser(user)
+      store.setIsAuthenticated(true)
+      store.navigate(isAdmin ? 'admin' : 'dashboard')
+    } else {
+      console.error('Demo login failed')
+    }
+  } catch (err) {
+    console.error('Demo login error:', err)
+  }
 }

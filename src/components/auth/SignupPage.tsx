@@ -71,6 +71,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const strength = useMemo(() => getPasswordStrength(password), [password])
   const requirements = useMemo(() => getPasswordRequirements(password), [password])
@@ -78,9 +79,38 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!fullName || !email || !password || !confirmPassword) {
+      setError('Please fill in all fields')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match")
+      return
+    }
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    loginAsDefault()
+    setError('')
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: fullName }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        useAppStore.setState({
+          currentUser: data.user,
+          isAuthenticated: true,
+        })
+        navigate('dashboard')
+      } else {
+        setError(data.error || 'Failed to register. Please try again.')
+      }
+    } catch (err) {
+      setError('A network error occurred. Please try again.')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -140,6 +170,23 @@ export default function SignupPage() {
               Start searching smarter today
             </p>
           </div>
+
+          {error && (
+            <div
+              style={{
+                background: 'rgba(255,32,71,0.1)',
+                border: '1px solid var(--accent-red)',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                fontSize: '13px',
+                color: 'var(--accent-red)',
+                marginBottom: '20px',
+                textAlign: 'center',
+              }}
+            >
+              {error}
+            </div>
+          )}
 
           {/* Social signup */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>

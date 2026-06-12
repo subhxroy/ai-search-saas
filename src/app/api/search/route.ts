@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getZAI } from '@/lib/zai'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/auth-session'
 
 export const maxDuration = 60
 
@@ -214,7 +215,7 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  return handleSearch(query.trim(), deepResearch)
+  return handleSearch(req, query.trim(), deepResearch)
 }
 
 /* ------------------------------------------------------------------ */
@@ -240,7 +241,7 @@ export async function POST(req: NextRequest) {
     // apiKey is accepted but currently not validated (future: API key auth)
     void apiKey
 
-    return handleSearch(query.trim(), deepResearch === true)
+    return handleSearch(req, query.trim(), deepResearch === true)
   } catch {
     return corsResponse(
       { error: 'Invalid JSON body', code: 'INVALID_BODY' } satisfies ErrorResponse,
@@ -254,10 +255,14 @@ export async function POST(req: NextRequest) {
 /* ------------------------------------------------------------------ */
 
 async function handleSearch(
+  req: NextRequest,
   query: string,
   deepResearch: boolean
 ): Promise<NextResponse> {
   try {
+    const user = await getSessionUser(req)
+    const activeUserId = user ? user.id : 'local-user'
+
     const zai = await getZAI()
     const isDeep = deepResearch
 
@@ -430,20 +435,22 @@ ${sourcesBlock}`
     let conversationId = ''
     try {
       const title = query.length > 60 ? query.slice(0, 57) + '...' : query
-      // Ensure local-user exists for foreign key constraints in PostgreSQL
-      await db.user.upsert({
-        where: { id: 'local-user' },
-        update: {},
-        create: {
-          id: 'local-user',
-          email: 'local@nexus.ai',
-          name: 'Local User',
-        }
-      })
+      if (activeUserId === 'local-user') {
+        // Ensure local-user exists for foreign key constraints in PostgreSQL
+        await db.user.upsert({
+          where: { id: 'local-user' },
+          update: {},
+          create: {
+            id: 'local-user',
+            email: 'local@nexus.ai',
+            name: 'Local User',
+          }
+        })
+      }
       const newConv = await db.conversation.create({
         data: {
           title,
-          userId: 'local-user',
+          userId: activeUserId,
           isDeepResearch: isDeep,
           researchStatus: 'completed',
         },
@@ -489,7 +496,7 @@ ${sourcesBlock}`
       const duration = Date.now() - startTime
       await db.usageLog.create({
         data: {
-          userId: 'local-user',
+          userId: activeUserId,
           type: 'search',
           sourceCount: sources.length,
           duration,

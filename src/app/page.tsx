@@ -18,7 +18,7 @@ import Footer from '@/components/landing/Footer'
 import ChatView from '@/components/ChatView'
 import SearchInput from '@/components/SearchInput'
 import { handleSearch } from '@/lib/search-handler'
-import { Search, ArrowLeft, Plus, Menu } from 'lucide-react'
+import { Search, ArrowLeft, Plus, Menu, Loader2 } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -448,7 +448,8 @@ function EmptyChatState() {
 /* ------------------------------------------------------------------ */
 
 export default function Home() {
-  const { page, isAuthenticated, messages, theme } = useAppStore()
+  const { page, conversationId, setConversationId, isAuthenticated, messages, theme } = useAppStore()
+  const [isReady, setIsReady] = useState(false)
 
   // Enable dark mode by default
   useEffect(() => {
@@ -456,6 +457,87 @@ export default function Home() {
       document.documentElement.classList.add('dark')
     }
   }, [theme])
+
+  // Session recovery and state recovery on mount
+  useEffect(() => {
+    async function initSession() {
+      try {
+        const res = await fetch('/api/auth/me')
+        if (res.ok) {
+          const { user } = await res.json()
+          useAppStore.setState({ currentUser: user, isAuthenticated: true })
+
+          // Restore last page and conversation ID
+          const savedPage = localStorage.getItem('nexus_page')
+          const savedConvId = localStorage.getItem('nexus_conv_id')
+          if (savedPage) {
+            useAppStore.setState({ page: savedPage as any })
+          } else {
+            useAppStore.setState({ page: 'dashboard' })
+          }
+          if (savedConvId) {
+            setConversationId(savedConvId)
+            // Fetch messages for this conversation
+            const convRes = await fetch(`/api/conversations/${savedConvId}`)
+            if (convRes.ok) {
+              const { conversation } = await convRes.json()
+              if (conversation && conversation.messages) {
+                const mappedMessages = conversation.messages.map((m: any) => ({
+                  id: m.id,
+                  role: m.role,
+                  content: m.content,
+                  sources: m.sources,
+                  followUps: JSON.parse(m.followUps || '[]'),
+                  model: m.model,
+                }))
+                useAppStore.setState({ messages: mappedMessages })
+              }
+            }
+          }
+        } else {
+          // If unauthorized, reset to landing or current unauthenticated page
+          useAppStore.setState({ currentUser: null, isAuthenticated: false })
+          useAppStore.setState((state) => {
+            if (!['landing', 'login', 'signup', 'forgot-password', 'chat'].includes(state.page)) {
+              return { page: 'landing' }
+            }
+            return {}
+          })
+        }
+      } catch (err) {
+        console.warn('Session verification failed:', err)
+      } finally {
+        setIsReady(true)
+      }
+    }
+    initSession()
+  }, [setConversationId])
+
+  // Keep page persisted in localStorage on change
+  useEffect(() => {
+    if (isReady && page) {
+      localStorage.setItem('nexus_page', page)
+    }
+  }, [page, isReady])
+
+  // Keep conversation ID persisted in localStorage on change
+  useEffect(() => {
+    if (isReady) {
+      if (conversationId) {
+        localStorage.setItem('nexus_conv_id', conversationId)
+      } else {
+        localStorage.removeItem('nexus_conv_id')
+      }
+    }
+  }, [conversationId, isReady])
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black" style={{ color: '#fcfdff' }}>
+        <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+      </div>
+    )
+  }
 
   // ─── Auth pages (no app shell) ───
   if (page === 'login') return <LoginPage />

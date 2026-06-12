@@ -114,9 +114,10 @@ export default function DashboardPage() {
         const res = await fetch('/api/conversations')
         if (!res.ok) throw new Error('Failed to fetch')
         const data = await res.json()
-        if (!cancelled && Array.isArray(data)) {
+        const convList = data.conversations
+        if (!cancelled && Array.isArray(convList)) {
           setConversations(
-            data.slice(0, 4).map((c: Record<string, unknown>) => ({
+            convList.slice(0, 4).map((c: Record<string, unknown>) => ({
               id: c.id as string,
               title: (c.title as string) || 'Untitled conversation',
               date: (c.createdAt as string) || (c.updatedAt as string) || new Date().toISOString(),

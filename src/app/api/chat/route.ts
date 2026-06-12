@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getZAI } from '@/lib/zai'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/auth-session'
 
 function debugLog(msg: string, data?: any) {
   console.log(`[debug] ${msg}`, data !== undefined ? data : '')
@@ -132,6 +133,9 @@ export async function POST(req: NextRequest) {
       deepResearch?: boolean
     }
 
+    const user = await getSessionUser(req)
+    const activeUserId = user ? user.id : 'local-user'
+
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
       return new Response(JSON.stringify({ error: 'Query is required' }), {
         status: 400,
@@ -213,8 +217,8 @@ export async function POST(req: NextRequest) {
     let conversation = null
     try {
       if (conversationId) {
-        conversation = await db.conversation.findUnique({
-          where: { id: conversationId },
+        conversation = await db.conversation.findFirst({
+          where: { id: conversationId, userId: activeUserId },
           include: { messages: { orderBy: { createdAt: 'asc' } } },
         })
       }
@@ -361,20 +365,22 @@ ${sourcesBlock}`
     if (!conversation) {
       try {
         const title = query.length > 60 ? query.slice(0, 57) + '...' : query
-        // Ensure local-user exists for foreign key constraints in PostgreSQL
-        await db.user.upsert({
-          where: { id: 'local-user' },
-          update: {},
-          create: {
-            id: 'local-user',
-            email: 'local@nexus.ai',
-            name: 'Local User',
-          }
-        })
+        if (activeUserId === 'local-user') {
+          // Ensure local-user exists for foreign key constraints in PostgreSQL
+          await db.user.upsert({
+            where: { id: 'local-user' },
+            update: {},
+            create: {
+              id: 'local-user',
+              email: 'local@nexus.ai',
+              name: 'Local User',
+            }
+          })
+        }
         const newConv = await db.conversation.create({
           data: {
             title,
-            userId: 'local-user',
+            userId: activeUserId,
             isDeepResearch: isDeep,
             researchStatus: 'completed',
           },

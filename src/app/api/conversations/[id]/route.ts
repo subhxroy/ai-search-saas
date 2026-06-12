@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getSessionUser } from '@/lib/auth-session'
 
-// GET /api/conversations/[id] - Get a specific conversation with messages
+// GET /api/conversations/[id] - Get a specific conversation with messages (filtered by user session)
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const conversation = await db.conversation.findUnique({
-      where: { id },
+    const user = await getSessionUser(req)
+    const activeUserId = user ? user.id : 'local-user'
+
+    const conversation = await db.conversation.findFirst({
+      where: { id, userId: activeUserId },
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },
@@ -35,13 +39,27 @@ export async function GET(
   }
 }
 
-// DELETE /api/conversations/[id] - Delete a conversation
+// DELETE /api/conversations/[id] - Delete a conversation (filtered by user session)
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
+    const user = await getSessionUser(req)
+    const activeUserId = user ? user.id : 'local-user'
+
+    // Verify ownership first
+    const conversation = await db.conversation.findFirst({
+      where: { id, userId: activeUserId },
+    })
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: 'Conversation not found or unauthorized' },
+        { status: 404 }
+      )
+    }
 
     await db.conversation.delete({
       where: { id },
