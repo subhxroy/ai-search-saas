@@ -266,22 +266,43 @@ ${sourcesBlock}`
       { role: 'user' as const, content: query },
     ]
 
-    // ── Step 6: Call LLM (with retry) ──
-    let fullAnswer: string
-    try {
-      const completion = await retryWithBackoff(async () => {
-        return withTimeout(
-          zai.chat.completions.create({
-            model: zai.config.defaultModel || 'openrouter/owl-alpha',
-            messages,
-            thinking: { type: 'disabled' },
-          } as any),
-          30000
-        )
-      }, 2, 1500)
-      fullAnswer = completion.choices?.[0]?.message?.content || ''
-    } catch (llmErr) {
-      console.error('LLM call failed after retries:', llmErr)
+    // ── Step 6: Call LLM (with fallback models & retry) ──
+    let fullAnswer = ''
+    const modelsToTry = [
+      zai.config.defaultModel || 'openrouter/owl-alpha',
+      'google/gemini-2.5-flash',
+      'meta-llama/llama-3.3-70b-instruct'
+    ]
+
+    let llmSuccess = false
+    let lastLlmError: any = null
+
+    for (const modelName of modelsToTry) {
+      try {
+        const completion = await retryWithBackoff(async () => {
+          return withTimeout(
+            zai.chat.completions.create({
+              model: modelName,
+              messages,
+              thinking: { type: 'disabled' },
+            } as any),
+            20000
+          )
+        }, 1, 1000)
+        
+        fullAnswer = completion.choices?.[0]?.message?.content || ''
+        if (fullAnswer) {
+          llmSuccess = true
+          break
+        }
+      } catch (err) {
+        console.warn(`LLM call failed for model ${modelName}:`, err)
+        lastLlmError = err
+      }
+    }
+
+    if (!llmSuccess) {
+      console.error('All LLM models failed after retries:', lastLlmError)
       fullAnswer = 'I encountered an error generating a response. The AI service may be temporarily unavailable. Please try again in a moment.'
     }
 
