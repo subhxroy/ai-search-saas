@@ -2,6 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 
+if (process.env.NETLIFY) {
+  console.log('Building on Netlify: skipping postbuild standalone copying.');
+  process.exit(0);
+}
+
 const rootDir = path.resolve(__dirname, '..');
 
 const srcStatic = path.join(rootDir, '.next', 'static');
