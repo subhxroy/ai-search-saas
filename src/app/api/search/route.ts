@@ -344,9 +344,10 @@ ${sourcesBlock}`
       const completion = await retryWithBackoff(async () => {
         return withTimeout(
           zai.chat.completions.create({
+            model: zai.config.defaultModel || 'openrouter/owl-alpha',
             messages,
             thinking: { type: 'disabled' },
-          }),
+          } as any),
           30000
         )
       }, 2, 1500)

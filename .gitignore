@@ -52,3 +52,16 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# SQLite database files
+/db/*.db
+/db/*.db-journal
+/db/*.db-shm
+/db/*.db-wal
+*.db
+*.sqlite
+*.sqlite3
+
+# PID files
+*.pid
+.zscripts/*.pid
