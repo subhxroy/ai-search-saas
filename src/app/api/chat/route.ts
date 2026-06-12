@@ -2,6 +2,10 @@ import { NextRequest } from 'next/server'
 import { getZAI } from '@/lib/zai'
 import { db } from '@/lib/db'
 
+function debugLog(msg: string, data?: any) {
+  console.log(`[debug] ${msg}`, data !== undefined ? data : '')
+}
+
 export const maxDuration = 60
 
 /* ------------------------------------------------------------------ */
@@ -49,6 +53,70 @@ async function retryWithBackoff<T>(
     }
   }
   throw lastError
+}
+
+async function webSearchFallback(query: string, num: number = 6): Promise<SearchSource[]> {
+  debugLog(`webSearchFallback starting for query: "${query}"`);
+  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  try {
+    debugLog(`Fetching DDG HTML: ${url}`);
+    const res = await withTimeout(
+      fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      }),
+      8000
+    );
+    
+    debugLog(`Fetch response status: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+      console.warn(`DuckDuckGo fallback status: ${res.status}`);
+      debugLog(`DuckDuckGo fallback status not OK: ${res.status}`);
+      return [];
+    }
+    
+    const html = await res.text();
+    debugLog(`Received HTML length: ${html.length}`);
+    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    const results: SearchSource[] = [];
+    let match;
+    let rank = 1;
+    
+    while ((match = regex.exec(html)) !== null && results.length < num) {
+      let link = match[1];
+      if (link.includes('uddg=')) {
+        const parts = link.split('uddg=');
+        link = decodeURIComponent(parts[1].split('&')[0]);
+      }
+      
+      const title = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      const snippet = match[3].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      
+      let hostname = '';
+      try {
+        hostname = new URL(link).hostname.replace('www.', '');
+      } catch {
+        hostname = 'web';
+      }
+      
+      results.push({
+        title,
+        url: link,
+        snippet,
+        favicon: `https://external-content.duckduckgo.com/ip3/${hostname}.ico`,
+        host_name: hostname,
+        domain: hostname,
+        rank: rank++,
+      });
+    }
+    debugLog(`Parsed ${results.length} results from DDG HTML`);
+    return results;
+  } catch (err) {
+    console.error('DuckDuckGo fallback search failed:', err);
+    debugLog('DuckDuckGo fallback search failed with error:', err);
+    return [];
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -116,9 +184,11 @@ export async function POST(req: NextRequest) {
     const searchQuery = processedQuery !== query.trim() ? processedQuery : query.trim()
 
     // ── Step 1: Web Search (with retry) ──
+    debugLog(`POST handler starting search for query: "${query}" (searchQuery: "${searchQuery}")`);
     let sources: SearchSource[] = []
+    const numResults = isDeep ? 10 : 6
     try {
-      const numResults = isDeep ? 10 : 6
+      debugLog('Invoking ZAI web_search...');
       const searchResults = await retryWithBackoff(async () => {
         return withTimeout(
           zai.functions.invoke('web_search', {
@@ -129,6 +199,7 @@ export async function POST(req: NextRequest) {
         )
       }, 2, 1000)
 
+      debugLog(`ZAI web_search success, raw results count: ${searchResults?.length || 0}`);
       sources = (searchResults || []).map(
         (r: Record<string, unknown>, i: number) => ({
           title: (r.name as string) || '',
@@ -141,9 +212,18 @@ export async function POST(req: NextRequest) {
         })
       )
     } catch (searchErr) {
-      console.error('Web search failed after retries:', searchErr)
-      // Continue without sources — the LLM can still answer from general knowledge
+      console.warn('ZAI Web search failed, using DuckDuckGo fallback:', searchErr)
+      debugLog('ZAI Web search failed, using DuckDuckGo fallback:', searchErr)
+      sources = await webSearchFallback(searchQuery, numResults)
     }
+
+    if (sources.length === 0) {
+      console.log('No sources from ZAI search, attempting DuckDuckGo fallback...')
+      debugLog('No sources from ZAI search, attempting DuckDuckGo fallback...')
+      sources = await webSearchFallback(searchQuery, numResults)
+    }
+
+    debugLog(`Final sources resolved: ${sources.length} sources`);
 
     // ── Step 2: Read top pages in parallel (with timeout per page) ──
     const pageContents: string[] = []

@@ -69,6 +69,63 @@ async function retryWithBackoff<T>(
   throw lastError
 }
 
+async function webSearchFallback(query: string, num: number = 6): Promise<SearchSource[]> {
+  const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  try {
+    const res = await withTimeout(
+      fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      }),
+      8000
+    );
+    
+    if (!res.ok) {
+      console.warn(`DuckDuckGo fallback status: ${res.status}`);
+      return [];
+    }
+    
+    const html = await res.text();
+    const regex = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    const results: SearchSource[] = [];
+    let match;
+    let rank = 1;
+    
+    while ((match = regex.exec(html)) !== null && results.length < num) {
+      let link = match[1];
+      if (link.includes('uddg=')) {
+        const parts = link.split('uddg=');
+        link = decodeURIComponent(parts[1].split('&')[0]);
+      }
+      
+      const title = match[2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      const snippet = match[3].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      
+      let hostname = '';
+      try {
+        hostname = new URL(link).hostname.replace('www.', '');
+      } catch {
+        hostname = 'web';
+      }
+      
+      results.push({
+        title,
+        url: link,
+        snippet,
+        favicon: `https://external-content.duckduckgo.com/ip3/${hostname}.ico`,
+        host_name: hostname,
+        domain: hostname,
+        rank: rank++,
+      });
+    }
+    return results;
+  } catch (err) {
+    console.error('DuckDuckGo fallback search failed:', err);
+    return [];
+  }
+}
+
 function preprocessQuery(q: string): string {
   // Pattern: "under 1k", "below 2k", "within 5k", "under 10k", etc.
   const currencyPattern = /\b(under|below|within|under|around|about|less than|upto|up to|within)\s*(₹|rs\.?|inr)?\s*(\d+)\s*k\b/i
@@ -212,8 +269,8 @@ async function handleSearch(
 
     // ── Step 2: Web Search (with retry) ──
     let sources: SearchSource[] = []
+    const numResults = isDeep ? 10 : 6
     try {
-      const numResults = isDeep ? 10 : 6
       const searchResults = await retryWithBackoff(async () => {
         return withTimeout(
           zai.functions.invoke('web_search', {
@@ -236,8 +293,13 @@ async function handleSearch(
         })
       )
     } catch (searchErr) {
-      console.error('Web search failed after retries:', searchErr)
-      // Continue without sources — the LLM can still answer from general knowledge
+      console.warn('ZAI Web search failed, using DuckDuckGo fallback:', searchErr)
+      sources = await webSearchFallback(searchQuery, numResults)
+    }
+
+    if (sources.length === 0) {
+      console.log('No sources from ZAI search, attempting DuckDuckGo fallback...')
+      sources = await webSearchFallback(searchQuery, numResults)
     }
 
     // ── Step 3: Read top pages in parallel (with timeout per page) ──
@@ -338,22 +400,43 @@ ${sourcesBlock}`
       { role: 'user' as const, content: query },
     ]
 
-    // ── Step 6: Call LLM (with retry) — NON-STREAMING ──
-    let fullAnswer: string
-    try {
-      const completion = await retryWithBackoff(async () => {
-        return withTimeout(
-          zai.chat.completions.create({
-            model: zai.config.defaultModel || 'openrouter/owl-alpha',
-            messages,
-            thinking: { type: 'disabled' },
-          } as any),
-          30000
-        )
-      }, 2, 1500)
-      fullAnswer = completion.choices?.[0]?.message?.content || ''
-    } catch (llmErr) {
-      console.error('LLM call failed after retries:', llmErr)
+    // ── Step 6: Call LLM (with fallback models & retry) — NON-STREAMING ──
+    let fullAnswer = ''
+    const modelsToTry = [
+      zai.config.defaultModel || 'openrouter/owl-alpha',
+      'google/gemini-2.5-flash',
+      'meta-llama/llama-3.3-70b-instruct'
+    ]
+
+    let llmSuccess = false
+    let lastLlmError: any = null
+
+    for (const modelName of modelsToTry) {
+      try {
+        const completion = await retryWithBackoff(async () => {
+          return withTimeout(
+            zai.chat.completions.create({
+              model: modelName,
+              messages,
+              thinking: { type: 'disabled' },
+            } as any),
+            20000
+          )
+        }, 1, 1000)
+        
+        fullAnswer = completion.choices?.[0]?.message?.content || ''
+        if (fullAnswer) {
+          llmSuccess = true
+          break
+        }
+      } catch (err) {
+        console.warn(`LLM call failed for model ${modelName}:`, err)
+        lastLlmError = err
+      }
+    }
+
+    if (!llmSuccess) {
+      console.error('All LLM models failed after retries:', lastLlmError)
       return corsResponse(
         { error: 'AI service is temporarily unavailable. Please try again later.', code: 'LLM_ERROR' } satisfies ErrorResponse,
         503
