@@ -267,71 +267,12 @@ async function handleSearch(
     const processedQuery = preprocessQuery(query)
     const searchQuery = processedQuery !== query ? processedQuery : query
 
-    // ── Step 2: Web Search (with retry) ──
-    let sources: SearchSource[] = []
     const numResults = isDeep ? 10 : 6
-    try {
-      const searchResults = await retryWithBackoff(async () => {
-        return withTimeout(
-          zai.functions.invoke('web_search', {
-            query: searchQuery,
-            num: numResults,
-          }),
-          15000
-        )
-      }, 2, 1000)
+    // Directly run DuckDuckGo fallback search since ZAI web_search always returns 404 on OpenRouter
+    const sources = await webSearchFallback(searchQuery, numResults)
 
-      sources = (searchResults || []).map(
-        (r: Record<string, unknown>, i: number) => ({
-          title: (r.name as string) || '',
-          url: (r.url as string) || '',
-          snippet: (r.snippet as string) || '',
-          favicon: (r.favicon as string) || '',
-          host_name: (r.host_name as string) || '',
-          domain: (r.host_name as string) || (r.url ? new URL(r.url as string).hostname.replace('www.', '') : ''),
-          rank: i + 1,
-        })
-      )
-    } catch (searchErr) {
-      console.warn('ZAI Web search failed, using DuckDuckGo fallback:', searchErr)
-      sources = await webSearchFallback(searchQuery, numResults)
-    }
-
-    if (sources.length === 0) {
-      console.log('No sources from ZAI search, attempting DuckDuckGo fallback...')
-      sources = await webSearchFallback(searchQuery, numResults)
-    }
-
-    // ── Step 3: Read top pages in parallel (with timeout per page) ──
+    // Skip page reader step to avoid 404 timeouts, using snippets directly
     const pageContents: string[] = []
-    const topCount = isDeep ? 3 : 2
-    const topUrls = sources.slice(0, topCount).map((s) => s.url)
-
-    if (topUrls.length > 0) {
-      const pagePromises = topUrls.map((url) =>
-        withTimeout(
-          zai.functions.invoke('page_reader', { url }),
-          8000
-        ).then((pageResult) => {
-          if (pageResult?.data?.html) {
-            const text = (pageResult.data.html as string)
-              .replace(/<[^>]*>/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .slice(0, isDeep ? 3000 : 2000)
-            if (text.length > 50) return text
-          }
-          return null
-        }).catch(() => null)
-      )
-
-      const results = await Promise.allSettled(pagePromises)
-      for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-          pageContents.push(result.value)
-        }
-      }
-    }
 
     // ── Step 4: Build context ──
     const searchContext = sources
@@ -402,10 +343,11 @@ ${sourcesBlock}`
 
     // ── Step 6: Call LLM (with fallback models & retry) — NON-STREAMING ──
     let fullAnswer = ''
+    // Prioritize fast, high-quality models first (Gemini 2.5 flash is extremely fast on OpenRouter)
     const modelsToTry = [
-      zai.config.defaultModel || 'openrouter/owl-alpha',
       'google/gemini-2.5-flash',
-      'meta-llama/llama-3.3-70b-instruct'
+      'meta-llama/llama-3.3-70b-instruct',
+      zai.config.defaultModel || 'openrouter/owl-alpha'
     ]
 
     let llmSuccess = false
@@ -419,6 +361,7 @@ ${sourcesBlock}`
               model: modelName,
               messages,
               thinking: { type: 'disabled' },
+              max_tokens: 2048,
             } as any),
             20000
           )
@@ -487,6 +430,16 @@ ${sourcesBlock}`
     let conversationId = ''
     try {
       const title = query.length > 60 ? query.slice(0, 57) + '...' : query
+      // Ensure local-user exists for foreign key constraints in PostgreSQL
+      await db.user.upsert({
+        where: { id: 'local-user' },
+        update: {},
+        create: {
+          id: 'local-user',
+          email: 'local@nexus.ai',
+          name: 'Local User',
+        }
+      })
       const newConv = await db.conversation.create({
         data: {
           title,
