@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('Login error:', msg)
     return NextResponse.json(
-      { error: 'Internal server error during login' },
+      { error: `Internal server error during login: ${msg}` },
       { status: 500 }
     )
   }

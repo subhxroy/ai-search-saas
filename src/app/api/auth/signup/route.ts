@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('Signup error:', msg)
     return NextResponse.json(
-      { error: 'Internal server error during registration' },
+      { error: `Internal server error during registration: ${msg}` },
       { status: 500 }
     )
   }
