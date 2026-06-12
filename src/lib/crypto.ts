@@ -14,9 +14,13 @@ function getSecret(): string {
     return key
   }
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'FATAL: JWT_SECRET environment variable is required in production (min 32 chars).'
+    console.warn(
+      '⚠️ WARNING: JWT_SECRET environment variable is not set or is too short in production. ' +
+      'Generating a random key for this instance. Note: All active user sessions will be invalidated ' +
+      'whenever the server instance restarts. To fix this, set JWT_SECRET (min 32 chars) in your production settings.'
     )
+    cachedSecret = crypto.randomBytes(32).toString('hex')
+    return cachedSecret
   }
   // Development-only fallback — logged once
   console.warn(
