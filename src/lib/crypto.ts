@@ -4,9 +4,15 @@ import crypto from 'crypto'
 /*  Secret key — REQUIRED in production, warning in development        */
 /* ------------------------------------------------------------------ */
 
-const SECRET = (() => {
+let cachedSecret: string | null = null
+
+function getSecret(): string {
+  if (cachedSecret) return cachedSecret
   const key = process.env.JWT_SECRET
-  if (key && key.length >= 32) return key
+  if (key && key.length >= 32) {
+    cachedSecret = key
+    return key
+  }
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
       'FATAL: JWT_SECRET environment variable is required in production (min 32 chars).'
@@ -16,8 +22,9 @@ const SECRET = (() => {
   console.warn(
     '⚠️  JWT_SECRET is not set. Using insecure dev-only fallback. Set JWT_SECRET in .env before deploying.'
   )
-  return 'nexus-dev-only-insecure-fallback-key-do-not-deploy'
-})()
+  cachedSecret = 'nexus-dev-only-insecure-fallback-key-do-not-deploy'
+  return cachedSecret
+}
 
 /* ------------------------------------------------------------------ */
 /*  PBKDF2 password hashing                                            */
@@ -94,7 +101,7 @@ export function verifyPassword(
  */
 export function signSession(userId: string): string {
   const signature = crypto
-    .createHmac('sha256', SECRET)
+    .createHmac('sha256', getSecret())
     .update(userId)
     .digest('hex')
   return `${userId}.${signature}`
@@ -113,7 +120,7 @@ export function verifySession(token: string): string | null {
   if (!userId || !signature) return null
 
   const expected = crypto
-    .createHmac('sha256', SECRET)
+    .createHmac('sha256', getSecret())
     .update(userId)
     .digest('hex')
 
